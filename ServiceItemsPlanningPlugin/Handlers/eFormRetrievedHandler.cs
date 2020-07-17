@@ -34,13 +34,11 @@ namespace ServiceItemsPlanningPlugin.Handlers
 
     public class EFormRetrievedHandler : IHandleMessages<eFormRetrieved>
     {
-        private readonly eFormCore.Core _sdkCore;
         private readonly ItemsPlanningPnDbContext _dbContext;
 
-        public EFormRetrievedHandler(eFormCore.Core sdkCore, DbContextHelper dbContextHelper)
+        public EFormRetrievedHandler(DbContextHelper dbContextHelper)
         {
             _dbContext = dbContextHelper.GetDbContext();
-            _sdkCore = sdkCore;
         }
 
         public async Task Handle(eFormRetrieved message)

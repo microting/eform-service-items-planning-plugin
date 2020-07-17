@@ -25,13 +25,11 @@ SOFTWARE.
 namespace ServiceItemsPlanningPlugin.Handlers
 {
     using System;
-    using System.Collections.Generic;
     using System.Linq;
     using System.Threading.Tasks;
     using Infrastructure.Helpers;
     using Messages;
     using Microsoft.EntityFrameworkCore;
-    using Microting.eForm.Dto;
     using Microting.eForm.Infrastructure.Constants;
     using Microting.ItemsPlanningBase.Infrastructure.Data;
     using Microting.ItemsPlanningBase.Infrastructure.Data.Entities;
@@ -50,15 +48,23 @@ namespace ServiceItemsPlanningPlugin.Handlers
         
         public async Task Handle(ItemCaseCreate message)
         {
-            Item item = await _dbContext.Items.SingleOrDefaultAsync(x => x.Id == message.ItemId);
+            var item = await _dbContext.Items.SingleOrDefaultAsync(x => x.Id == message.ItemId);
 
             if (item != null)
             {
-                var siteIds = await _dbContext.PluginConfigurationValues.FirstOrDefaultAsync(x => x.Name == "ItemsPlanningBaseSettings:SiteIds");
-                var mainElement = await _sdkCore.TemplateRead(message.RelatedEFormId);
-                string folderId = GetFolderId(message.Name).ToString();
+                var planning = await _dbContext.Plannings
+                    .Where(x => x.WorkflowState != Constants.WorkflowStates.Removed)
+                    .SingleOrDefaultAsync(x => x.Id == message.PlanningId);
 
-                PlanningCase planningCase = await _dbContext.PlanningCases.SingleOrDefaultAsync(x => x.ItemId == item.Id && x.WorkflowState != Constants.WorkflowStates.Retracted);
+                var siteIds = planning.PlanningSites
+                    .Where(x => x.WorkflowState != Constants.WorkflowStates.Removed)
+                    .Select(x => x.SiteId)
+                    .ToList();
+
+                var mainElement = await _sdkCore.TemplateRead(message.RelatedEFormId);
+                var folderId = GetFolderId(message.Name).ToString();
+
+                var planningCase = await _dbContext.PlanningCases.SingleOrDefaultAsync(x => x.ItemId == item.Id && x.WorkflowState != Constants.WorkflowStates.Retracted);
                 if (planningCase != null)
                 {
                     planningCase.WorkflowState = Constants.WorkflowStates.Retracted;
@@ -73,15 +79,14 @@ namespace ServiceItemsPlanningPlugin.Handlers
                 };
                 await planningCase.Create(_dbContext);
 
-                foreach (var siteIdString in siteIds.Value.Split(','))
+                foreach (var siteId in siteIds)
                 {
-                    var siteId = int.Parse(siteIdString);
                     var casesToDelete = _dbContext.PlanningCaseSites.
                         Where(x => x.ItemId == item.Id && x.MicrotingSdkSiteId == siteId && x.WorkflowState != Constants.WorkflowStates.Retracted);
 
-                    foreach (PlanningCaseSite caseToDelete in casesToDelete)
+                    foreach (var caseToDelete in casesToDelete)
                     {
-                        CaseDto caseDto = await _sdkCore.CaseLookupCaseId(caseToDelete.MicrotingSdkCaseId);
+                        var caseDto = await _sdkCore.CaseLookupCaseId(caseToDelete.MicrotingSdkCaseId);
                         if (caseDto.MicrotingUId != null) await _sdkCore.CaseDelete((int) caseDto.MicrotingUId);
                         caseToDelete.WorkflowState = Constants.WorkflowStates.Retracted;
                         await caseToDelete.Update(_dbContext);
@@ -107,7 +112,7 @@ namespace ServiceItemsPlanningPlugin.Handlers
                     mainElement.StartDate = DateTime.Now.ToUniversalTime();
                     mainElement.EndDate = DateTime.Now.AddYears(10).ToUniversalTime();
 
-                    PlanningCaseSite planningCaseSite =
+                    var planningCaseSite =
                         await _dbContext.PlanningCaseSites.SingleOrDefaultAsync(x => x.PlanningCaseId == planningCase.Id && x.MicrotingSdkSiteId == siteId);
 
                     if (planningCaseSite == null)
@@ -125,10 +130,10 @@ namespace ServiceItemsPlanningPlugin.Handlers
                     }
 
                     if (planningCaseSite.MicrotingSdkCaseId >= 1) continue;
-                    int? caseId = await _sdkCore.CaseCreate(mainElement, "", siteId, null);
+                    var caseId = await _sdkCore.CaseCreate(mainElement, "", siteId, null);
                     if (caseId != null)
                     {
-                        CaseDto caseDto = await _sdkCore.CaseLookupMUId((int) caseId);
+                        var caseDto = await _sdkCore.CaseLookupMUId((int) caseId);
                         if (caseDto?.CaseId != null) planningCaseSite.MicrotingSdkCaseId = (int) caseDto.CaseId;
                         await planningCaseSite.Update(_dbContext);
                     }
@@ -138,11 +143,11 @@ namespace ServiceItemsPlanningPlugin.Handlers
         
         private int GetFolderId(string name)
         {
-            List<FolderDto> folderDtos = _sdkCore.FolderGetAll(true).Result;
+            var folderDtos = _sdkCore.FolderGetAll(true).Result;
 
-            bool folderAlreadyExist = false;
-            int microtingUId = 0;
-            foreach (FolderDto folderDto in folderDtos)
+            var folderAlreadyExist = false;
+            var microtingUId = 0;
+            foreach (var folderDto in folderDtos)
             {
                 if (folderDto.Name == name)
                 {
@@ -156,7 +161,7 @@ namespace ServiceItemsPlanningPlugin.Handlers
                 _sdkCore.FolderCreate(name, "", null);
                 folderDtos = _sdkCore.FolderGetAll(true).Result;
                 
-                foreach (FolderDto folderDto in folderDtos)
+                foreach (var folderDto in folderDtos)
                 {
                     if (folderDto.Name == name)
                     {

@@ -26,11 +26,11 @@ namespace ServiceItemsPlanningPlugin.Messages
 {
     public class ScheduledItemExecuted
     {
-        public int itemListId { get; }
+        public int PlanningId { get; }
 
-        public ScheduledItemExecuted(int itemListId)
+        public ScheduledItemExecuted(int planningId)
         {
-            this.itemListId = itemListId;
+            PlanningId = planningId;
         }
     }
 }

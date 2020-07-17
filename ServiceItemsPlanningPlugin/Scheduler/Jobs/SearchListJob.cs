@@ -79,27 +79,27 @@ namespace ServiceItemsPlanningPlugin.Scheduler.Jobs
 //            Console.WriteLine($"Weekly lists query: {weeklyListsQuery.ToSql()}");
 //            Console.WriteLine($"Monthly lists query: {monthlyListsQuery.ToSql()}");
 
-            var dailyLists = await dailyListsQuery.ToListAsync();
-            var weeklyLists = await weeklyListsQuery.ToListAsync();
-            var monthlyLists = await monthlyListsQuery.ToListAsync();
+            var dailyPlannings = await dailyListsQuery.ToListAsync();
+            var weeklyPlannings = await weeklyListsQuery.ToListAsync();
+            var monthlyPlannings = await monthlyListsQuery.ToListAsync();
 
-            Console.WriteLine($"Found {dailyLists.Count} daily lists");
-            Console.WriteLine($"Found {weeklyLists.Count} weekly lists");
-            Console.WriteLine($"Found {monthlyLists.Count} monthly lists");
+            Console.WriteLine($"Found {dailyPlannings.Count} daily plannings");
+            Console.WriteLine($"Found {weeklyPlannings.Count} weekly plannings");
+            Console.WriteLine($"Found {monthlyPlannings.Count} monthly plannings");
 
-            var scheduledItemLists = new List<Planning>();
-            scheduledItemLists.AddRange(dailyLists);
-            scheduledItemLists.AddRange(weeklyLists);
-            scheduledItemLists.AddRange(monthlyLists);
+            var scheduledItemPlannings = new List<Planning>();
+            scheduledItemPlannings.AddRange(dailyPlannings);
+            scheduledItemPlannings.AddRange(weeklyPlannings);
+            scheduledItemPlannings.AddRange(monthlyPlannings);
 
-            foreach (var list in scheduledItemLists)
+            foreach (var planning in scheduledItemPlannings)
             {
-                list.LastExecutedTime = now;
-                await list.Update(_dbContext);
+                planning.LastExecutedTime = now;
+                await planning.Update(_dbContext);
 
-                await _bus.SendLocal(new ScheduledItemExecuted(list.Id));
+                await _bus.SendLocal(new ScheduledItemExecuted(planning.Id));
 
-                Console.WriteLine($"List {list.Name} executed");
+                Console.WriteLine($"Planning {planning.Name} executed");
             }
         }
     }

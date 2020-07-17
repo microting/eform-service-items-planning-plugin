@@ -31,9 +31,9 @@ namespace ServiceItemsPlanningPlugin.Handlers
     using Messages;
     using Microsoft.EntityFrameworkCore;
     using Microting.ItemsPlanningBase.Infrastructure.Data;
-    using OpenStack.NetCoreSwiftClient.Extensions;
     using Rebus.Bus;
     using Rebus.Handlers;
+    using Constants = Microting.eForm.Infrastructure.Constants.Constants;
 
     public class ScheduledItemExecutedHandler : IHandleMessages<ScheduledItemExecuted>
     {
@@ -51,12 +51,20 @@ namespace ServiceItemsPlanningPlugin.Handlers
         #pragma warning disable 1998
         public async Task Handle(ScheduledItemExecuted message)
         {
-            var siteIds = _dbContext.PluginConfigurationValues.FirstOrDefault(x => x.Name == "ItemsPlanningBaseSettings:SiteIds");
-            var list = await _dbContext.Plannings.SingleOrDefaultAsync(x => x.Id == message.itemListId);
-            var mainElement = _sdkCore.TemplateRead(list.RelatedEFormId);
-            var folderId = getFolderId(list.Name).ToString();
+            var planning = await _dbContext.Plannings
+                .Where(x => x.WorkflowState != Constants.WorkflowStates.Removed)
+                .SingleOrDefaultAsync(x => x.Id == message.PlanningId);
 
-            if (siteIds == null || siteIds.Value.IsNullOrEmpty())
+            var siteIds = planning.PlanningSites
+                .Where(x => x.WorkflowState != Constants.WorkflowStates.Removed)
+                .Select(x => x.SiteId)
+                .ToList();
+                
+
+            var mainElement = _sdkCore.TemplateRead(planning.RelatedEFormId);
+            var folderId = getFolderId(planning.Name).ToString();
+
+            if (!siteIds.Any())
             {
                 Console.WriteLine("SiteIds not set");
                 return;
@@ -64,7 +72,7 @@ namespace ServiceItemsPlanningPlugin.Handlers
 
             Console.WriteLine($"SiteIds {siteIds}");
 
-            await _bus.SendLocal(new ItemCaseCreate(list.Id, list.Item.Id, list.RelatedEFormId, list.Name));
+            await _bus.SendLocal(new ItemCaseCreate(planning.Id, planning.Item.Id, planning.RelatedEFormId, planning.Name));
         }
 
         private int getFolderId(string name)
