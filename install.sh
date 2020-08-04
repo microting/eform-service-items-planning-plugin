@@ -1,12 +1,12 @@
 #!/bin/bash
 
-if [ ! -d "/var/www/microting/eform-service-itemsplanning-plugin" ]; then
+if [ ! -d "/var/www/microting/eform-service-items-planning-plugin" ]; then
   cd /var/www/microting
   su ubuntu -c \
-  "git clone https://github.com/microting/eform-service-itemsplanning-plugin.git -b stable"
+  "git clone https://github.com/microting/eform-service-items-planning-plugin.git -b stable"
 fi
 
-cd /var/www/microting/eform-service-itemsplanning-plugin
+cd /var/www/microting/eform-service-items-planning-plugin
 git pull
 su ubuntu -c \
 "dotnet restore ServiceItemsPlanningPlugin.sln"
@@ -21,10 +21,8 @@ su ubuntu -c \
 su ubuntu -c \
 "mkdir -p /var/www/microting/eform-debian-service/MicrotingService/out/Plugins/"
 
-if [ -d "/var/www/microting/eform-debian-service/MicrotingService/out/Plugins/ServiceItemsPlanningPlugin" ]; then
-	rm -fR /var/www/microting/eform-debian-service/MicrotingService/out/Plugins/ServiceItemsPlanningPlugin
-fi
+rm -fR /var/www/microting/eform-debian-service/MicrotingService/out/Plugins/ServiceItemsPlanningPlugin
 
 su ubuntu -c \
-"cp -av /var/www/microting/eform-service-itemsplanning-plugin/ServiceItemsPlanningPlugin/out /var/www/microting/eform-debian-service/MicrotingService/out/Plugins/ServiceItemsPlanningPlugin"
+"cp -av /var/www/microting/eform-service-items-planning-plugin/out /var/www/microting/eform-debian-service/MicrotingService/out/Plugins/ServiceItemsPlanningPlugin"
 /rabbitmqadmin declare queue name=eform-service-itemsplanning-plugin durable=true
