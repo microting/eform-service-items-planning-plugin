@@ -130,7 +130,9 @@ namespace ServiceItemsPlanningPlugin.Handlers
                     }
 
                     if (planningCaseSite.MicrotingSdkCaseId >= 1) continue;
-                    var caseId = await _sdkCore.CaseCreate(mainElement, "", siteId, null);
+                    await using var sdkDbContext = _sdkCore.dbContextHelper.GetDbContext();
+                    var sdkSite = await sdkDbContext.sites.SingleAsync(x => x.Id == siteId);
+                    var caseId = await _sdkCore.CaseCreate(mainElement, "", (int)sdkSite.MicrotingUid, null);
                     if (caseId != null)
                     {
                         var caseDto = await _sdkCore.CaseLookupMUId((int) caseId);
