@@ -1,7 +1,7 @@
 dist: xenial
 branches:
-  only:
-    - master
+  except:
+    - /^v[0-9]/
 language: csharp
 solution: ServiceItemsPlanningPlugin.sln
 mono: none
