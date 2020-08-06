@@ -6,4 +6,6 @@ if [ -d "Documents/workspace/microting/eform-debian-service/Plugins/ServiceItems
 	rm -fR Documents/workspace/microting/eform-debian-service/Plugins/ServiceItemsPlanningPlugin
 fi
 
-cp -av Documents/workspace/microting/eform-service-itemsplanning-plugin/ServiceItemsPlanningPlugin Documents/workspace/microting/eform-debian-service/Plugins/ServiceItemsPlanningPlugin
+mkdir Documents/workspace/microting/eform-debian-service/Plugins
+
+cp -av Documents/workspace/microting/eform-service-items-planning-plugin/ServiceItemsPlanningPlugin Documents/workspace/microting/eform-debian-service/Plugins/ServiceItemsPlanningPlugin
