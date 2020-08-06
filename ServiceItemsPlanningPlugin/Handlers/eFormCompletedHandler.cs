@@ -22,6 +22,10 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+using Microting.eForm.Dto;
+using Microting.eForm.Infrastructure;
+using Microting.eForm.Infrastructure.Models;
+
 namespace ServiceItemsPlanningPlugin.Handlers
 {
     using System.Collections.Generic;
@@ -49,34 +53,34 @@ namespace ServiceItemsPlanningPlugin.Handlers
         public async Task Handle(eFormCompleted message)
         {
             var planningCaseSite = await _dbContext.PlanningCaseSites.SingleOrDefaultAsync(x => x.MicrotingSdkCaseId == message.caseId);
-            
+            using MicrotingDbContext sdkDbContext = _sdkCore.dbContextHelper.GetDbContext();
             if (planningCaseSite != null)
             {
                 planningCaseSite.Status = 100;
-                var caseDto = _sdkCore.CaseReadByCaseId(message.caseId);
-                var microtingUId = caseDto.Result.MicrotingUId;
-                var microtingCheckUId = caseDto.Result.CheckUId;
-//                if (microtingUId != null && microtingCheckUId != null) {}
+                CaseDto caseDto = await _sdkCore.CaseReadByCaseId(message.caseId);
+                var microtingUId = caseDto.MicrotingUId;
+                var microtingCheckUId = caseDto.CheckUId;
                 if (microtingUId != null && microtingCheckUId != null)
                 {
-                    var theCase = _sdkCore.CaseRead((int)microtingUId, (int)microtingCheckUId);
+                    ReplyElement theCase = await _sdkCore.CaseRead((int)microtingUId, (int)microtingCheckUId);
 
                     planningCaseSite = await SetFieldValue(planningCaseSite, theCase.Id);
 
-                    planningCaseSite.MicrotingSdkCaseDoneAt = theCase.Result.DoneAt;
-                    planningCaseSite.DoneByUserId = planningCaseSite.MicrotingSdkSiteId;
-                    var site = _sdkCore.SiteRead(planningCaseSite.MicrotingSdkSiteId);
-                    planningCaseSite.DoneByUserName = $"{site.Result.FirstName} {site.Result.LastName}";
+                    planningCaseSite.MicrotingSdkCaseDoneAt = theCase.DoneAt;
+                    planningCaseSite.DoneByUserId = theCase.DoneById;
+                    var worker = await sdkDbContext.workers.SingleAsync(x => x.Id == planningCaseSite.DoneByUserId);
+                    planningCaseSite.DoneByUserName = $"{worker.FirstName} {worker.LastName}";
                     await planningCaseSite.Update(_dbContext);
 
                     var planningCase = await _dbContext.PlanningCases.SingleOrDefaultAsync(x => x.Id == planningCaseSite.PlanningCaseId);
                     if (planningCase.Status != 100)
                     {
                         planningCase.Status = 100;
-                        planningCase.MicrotingSdkCaseDoneAt = theCase.Result.DoneAt;
+                        planningCase.MicrotingSdkCaseDoneAt = theCase.DoneAt;
                         planningCase.MicrotingSdkCaseId = planningCaseSite.MicrotingSdkCaseId;
-                        planningCase.DoneByUserId = planningCaseSite.MicrotingSdkSiteId;
-                        planningCase.DoneByUserName = $"{site.Result.FirstName} {site.Result.LastName}";
+                        planningCase.DoneByUserId = theCase.DoneById;
+                        planningCase.WorkflowState = Constants.WorkflowStates.Processed;
+                        // planningCase.DoneByUserName = $"{site.Result.FirstName} {site.Result.LastName}";
 
                         planningCase = await SetFieldValue(planningCase, theCase.Id);
                         await planningCase.Update(_dbContext);
