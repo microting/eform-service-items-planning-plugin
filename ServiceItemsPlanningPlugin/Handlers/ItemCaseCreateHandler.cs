@@ -81,8 +81,8 @@ namespace ServiceItemsPlanningPlugin.Handlers
 
                 foreach (var siteId in siteIds)
                 {
-                    var casesToDelete = _dbContext.PlanningCaseSites.
-                        Where(x => x.ItemId == item.Id && x.MicrotingSdkSiteId == siteId && x.WorkflowState != Constants.WorkflowStates.Retracted);
+                    var casesToDelete = await _dbContext.PlanningCaseSites.
+                        Where(x => x.ItemId == item.Id && x.MicrotingSdkSiteId == siteId && x.WorkflowState != Constants.WorkflowStates.Retracted).ToListAsync();
 
                     foreach (var caseToDelete in casesToDelete)
                     {

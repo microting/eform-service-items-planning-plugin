@@ -79,6 +79,7 @@ namespace ServiceItemsPlanningPlugin.Handlers
                         planningCase.MicrotingSdkCaseDoneAt = theCase.DoneAt;
                         planningCase.MicrotingSdkCaseId = planningCaseSite.MicrotingSdkCaseId;
                         planningCase.DoneByUserId = theCase.DoneById;
+                        planningCase.DoneByUserName = planningCaseSite.DoneByUserName;
                         planningCase.WorkflowState = Constants.WorkflowStates.Processed;
                         // planningCase.DoneByUserName = $"{site.Result.FirstName} {site.Result.LastName}";
 
