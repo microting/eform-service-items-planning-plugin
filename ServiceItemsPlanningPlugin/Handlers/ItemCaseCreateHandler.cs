@@ -22,6 +22,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+using Microting.eForm.Infrastructure;
+
 namespace ServiceItemsPlanningPlugin.Handlers
 {
     using System;
@@ -50,6 +52,7 @@ namespace ServiceItemsPlanningPlugin.Handlers
         {
             var item = await _dbContext.Items.SingleOrDefaultAsync(x => x.Id == message.ItemId);
 
+            await using MicrotingDbContext dbContext = _sdkCore.dbContextHelper.GetDbContext();
             if (item != null)
             {
                 var planning = await _dbContext.Plannings
@@ -62,7 +65,7 @@ namespace ServiceItemsPlanningPlugin.Handlers
                     .ToList();
 
                 var mainElement = await _sdkCore.TemplateRead(message.RelatedEFormId);
-                var folderId = GetFolderId(message.Name).ToString();
+                var folderId = dbContext.folders.Single(x => x.Id == item.eFormSdkFolderId).MicrotingUid.ToString();
 
                 var planningCase = await _dbContext.PlanningCases.SingleOrDefaultAsync(x => x.ItemId == item.Id && x.WorkflowState != Constants.WorkflowStates.Retracted);
                 if (planningCase != null)
@@ -141,38 +144,6 @@ namespace ServiceItemsPlanningPlugin.Handlers
                     }
                 }
             }
-        }
-        
-        private int GetFolderId(string name)
-        {
-            var folderDtos = _sdkCore.FolderGetAll(true).Result;
-
-            var folderAlreadyExist = false;
-            var microtingUId = 0;
-            foreach (var folderDto in folderDtos)
-            {
-                if (folderDto.Name == name)
-                {
-                    folderAlreadyExist = true;
-                    if (folderDto.MicrotingUId != null) microtingUId = (int) folderDto.MicrotingUId;
-                }
-            }
-
-            if (!folderAlreadyExist)
-            {
-                _sdkCore.FolderCreate(name, "", null);
-                folderDtos = _sdkCore.FolderGetAll(true).Result;
-                
-                foreach (var folderDto in folderDtos)
-                {
-                    if (folderDto.Name == name)
-                    {
-                        if (folderDto.MicrotingUId != null) microtingUId = (int) folderDto.MicrotingUId;
-                    }
-                }
-            }
-
-            return microtingUId;
         }
     }
 }
