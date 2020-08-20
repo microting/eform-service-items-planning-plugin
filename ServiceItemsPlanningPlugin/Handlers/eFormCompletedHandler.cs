@@ -116,57 +116,6 @@ namespace ServiceItemsPlanningPlugin.Handlers
             var fieldValues = await _sdkCore.Advanced_FieldValueReadList(caseIds);
 
             if (planning == null) return itemCaseSite;
-
-            if (planning.SdkFieldEnabled1)
-            {
-                itemCaseSite.SdkFieldValue1 =
-                    fieldValues.SingleOrDefault(x => x.FieldId == planning.SdkFieldId1)?.ValueReadable;
-            }
-            if (planning.SdkFieldEnabled2)
-            {
-                itemCaseSite.SdkFieldValue2 =
-                    fieldValues.SingleOrDefault(x => x.FieldId == planning.SdkFieldId2)?.ValueReadable;
-            }
-            if (planning.SdkFieldEnabled3)
-            {
-                itemCaseSite.SdkFieldValue3 =
-                    fieldValues.SingleOrDefault(x => x.FieldId == planning.SdkFieldId3)?.ValueReadable;
-            }
-            if (planning.SdkFieldEnabled4)
-            {
-                itemCaseSite.SdkFieldValue4 =
-                    fieldValues.SingleOrDefault(x => x.FieldId == planning.SdkFieldId4)?.ValueReadable;
-            }
-            if (planning.SdkFieldEnabled5)
-            {
-                itemCaseSite.SdkFieldValue5 =
-                    fieldValues.SingleOrDefault(x => x.FieldId == planning.SdkFieldId5)?.ValueReadable;
-            }
-            if (planning.SdkFieldEnabled6)
-            {
-                itemCaseSite.SdkFieldValue6 =
-                    fieldValues.SingleOrDefault(x => x.FieldId == planning.SdkFieldId6)?.ValueReadable;
-            }
-            if (planning.SdkFieldEnabled7)
-            {
-                itemCaseSite.SdkFieldValue7 =
-                    fieldValues.SingleOrDefault(x => x.FieldId == planning.SdkFieldId7)?.ValueReadable;
-            }
-            if (planning.SdkFieldEnabled8)
-            {
-                itemCaseSite.SdkFieldValue8 =
-                    fieldValues.SingleOrDefault(x => x.FieldId == planning.SdkFieldId8)?.ValueReadable;
-            }
-            if (planning.SdkFieldEnabled9)
-            {
-                itemCaseSite.SdkFieldValue9 =
-                    fieldValues.SingleOrDefault(x => x.FieldId == planning.SdkFieldId9)?.ValueReadable;
-            }
-            if (planning.SdkFieldEnabled10)
-            {
-                itemCaseSite.SdkFieldValue10 =
-                    fieldValues.SingleOrDefault(x => x.FieldId == planning.SdkFieldId10)?.ValueReadable;
-            }
             if (planning.NumberOfImagesEnabled)
             {
                 itemCaseSite.NumberOfImages = 0;
@@ -194,57 +143,6 @@ namespace ServiceItemsPlanningPlugin.Handlers
             var fieldValues = await _sdkCore.Advanced_FieldValueReadList(caseIds);
 
             if (planning == null) return itemCase;
-
-            if (planning.SdkFieldEnabled1)
-            {
-                itemCase.SdkFieldValue1 =
-                    fieldValues.SingleOrDefault(x => x.FieldId == planning.SdkFieldId1)?.ValueReadable;
-            }
-            if (planning.SdkFieldEnabled2)
-            {
-                itemCase.SdkFieldValue2 =
-                    fieldValues.SingleOrDefault(x => x.FieldId == planning.SdkFieldId2)?.ValueReadable;
-            }
-            if (planning.SdkFieldEnabled3)
-            {
-                itemCase.SdkFieldValue3 =
-                    fieldValues.SingleOrDefault(x => x.FieldId == planning.SdkFieldId3)?.ValueReadable;
-            }
-            if (planning.SdkFieldEnabled4)
-            {
-                itemCase.SdkFieldValue4 =
-                    fieldValues.SingleOrDefault(x => x.FieldId == planning.SdkFieldId4)?.ValueReadable;
-            }
-            if (planning.SdkFieldEnabled5)
-            {
-                itemCase.SdkFieldValue5 =
-                    fieldValues.SingleOrDefault(x => x.FieldId == planning.SdkFieldId5)?.ValueReadable;
-            }
-            if (planning.SdkFieldEnabled6)
-            {
-                itemCase.SdkFieldValue6 =
-                    fieldValues.SingleOrDefault(x => x.FieldId == planning.SdkFieldId6)?.ValueReadable;
-            }
-            if (planning.SdkFieldEnabled7)
-            {
-                itemCase.SdkFieldValue7 =
-                    fieldValues.SingleOrDefault(x => x.FieldId == planning.SdkFieldId7)?.ValueReadable;
-            }
-            if (planning.SdkFieldEnabled8)
-            {
-                itemCase.SdkFieldValue8 =
-                    fieldValues.SingleOrDefault(x => x.FieldId == planning.SdkFieldId8)?.ValueReadable;
-            }
-            if (planning.SdkFieldEnabled9)
-            {
-                itemCase.SdkFieldValue9 =
-                    fieldValues.SingleOrDefault(x => x.FieldId == planning.SdkFieldId9)?.ValueReadable;
-            }
-            if (planning.SdkFieldEnabled10)
-            {
-                itemCase.SdkFieldValue10 =
-                    fieldValues.SingleOrDefault(x => x.FieldId == planning.SdkFieldId10)?.ValueReadable;
-            }
             if (planning.NumberOfImagesEnabled)
             {
                 itemCase.NumberOfImages = 0;
