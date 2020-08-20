@@ -59,10 +59,6 @@ namespace ServiceItemsPlanningPlugin.Handlers
                 .Where(x => x.WorkflowState != Constants.WorkflowStates.Removed)
                 .Select(x => x.SiteId)
                 .ToList();
-                
-
-            var mainElement = _sdkCore.TemplateRead(planning.RelatedEFormId);
-            var folderId = getFolderId(planning.Name).ToString();
 
             if (!siteIds.Any())
             {
@@ -73,38 +69,6 @@ namespace ServiceItemsPlanningPlugin.Handlers
             Console.WriteLine($"SiteIds {siteIds}");
 
             await _bus.SendLocal(new ItemCaseCreate(planning.Id, planning.Item.Id, planning.RelatedEFormId, planning.Name));
-        }
-
-        private int getFolderId(string name)
-        {
-            var folderDtos = _sdkCore.FolderGetAll(true).Result;
-
-            var folderAlreadyExist = false;
-            var microtingUId = 0;
-            foreach (var folderDto in folderDtos)
-            {
-                if (folderDto.Name == name)
-                {
-                    folderAlreadyExist = true;
-                    microtingUId = (int)folderDto.MicrotingUId;
-                }
-            }
-
-            if (!folderAlreadyExist)
-            {
-                _sdkCore.FolderCreate(name, "", null);
-                folderDtos = _sdkCore.FolderGetAll(true).Result;
-                
-                foreach (var folderDto in folderDtos)
-                {
-                    if (folderDto.Name == name)
-                    {
-                        microtingUId = (int)folderDto.MicrotingUId;
-                    }
-                }
-            }
-
-            return microtingUId;
         }
     }
 }
