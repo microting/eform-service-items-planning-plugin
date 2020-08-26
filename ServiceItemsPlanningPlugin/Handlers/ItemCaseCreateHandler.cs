@@ -67,14 +67,14 @@ namespace ServiceItemsPlanningPlugin.Handlers
                 var mainElement = await _sdkCore.TemplateRead(message.RelatedEFormId);
                 var folderId = dbContext.folders.Single(x => x.Id == item.eFormSdkFolderId).MicrotingUid.ToString();
 
-                var planningCase = await _dbContext.PlanningCases.SingleOrDefaultAsync(x => x.ItemId == item.Id && x.WorkflowState != Constants.WorkflowStates.Retracted);
-                if (planningCase != null)
+                var planningCases = await _dbContext.PlanningCases.Where(x => x.ItemId == item.Id && x.WorkflowState != Constants.WorkflowStates.Retracted).ToListAsync();
+                foreach (PlanningCase cPlanningCase in planningCases)
                 {
-                    planningCase.WorkflowState = Constants.WorkflowStates.Retracted;
-                    await planningCase.Update(_dbContext);    
+                    cPlanningCase.WorkflowState = Constants.WorkflowStates.Retracted;
+                    await cPlanningCase.Update(_dbContext);
                 }
                 
-                planningCase = new PlanningCase()
+                PlanningCase planningCase = new PlanningCase()
                 {
                     ItemId = item.Id,
                     Status = 66,
