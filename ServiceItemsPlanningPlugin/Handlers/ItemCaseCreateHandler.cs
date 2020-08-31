@@ -23,6 +23,7 @@ SOFTWARE.
 */
 
 using Microting.eForm.Infrastructure;
+using Microting.eFormApi.BasePn.Infrastructure.Helpers;
 
 namespace ServiceItemsPlanningPlugin.Handlers
 {
@@ -64,10 +65,35 @@ namespace ServiceItemsPlanningPlugin.Handlers
                     .Select(x => x.SiteId)
                     .ToList();
 
+                var removedSiteIds = planning.PlanningSites
+                    .Where(x => x.WorkflowState == Constants.WorkflowStates.Removed)
+                    .Select(x => x.SiteId)
+                    .ToList();
+
+                foreach (var siteId in removedSiteIds)
+                {
+                    Log.LogEvent($"ItemCaseCreateHandler.Task: Found {removedSiteIds.Count} sites, which has been removed, so checking for PlanningCaseSites which has not yet been retracted.");
+                    var casesToDelete = await _dbContext.PlanningCaseSites.Where(x =>
+                        x.ItemId == item.Id && x.MicrotingSdkSiteId == siteId &&
+                        x.WorkflowState != Constants.WorkflowStates.Retracted).ToListAsync();
+
+                    Log.LogEvent($"ItemCaseCreateHandler.Task: Found {casesToDelete.Count} PlanningCaseSites, which has not yet been retracted, so retracting now.");
+                    foreach (var caseToDelete in casesToDelete)
+                    {
+                        Log.LogEvent($"ItemCaseCreateHandler.Task: Trying to retract the case with Id: {caseToDelete.Id}");
+                        var caseDto = await _sdkCore.CaseLookupCaseId(caseToDelete.MicrotingSdkCaseId);
+                        if (caseDto.MicrotingUId != null) await _sdkCore.CaseDelete((int) caseDto.MicrotingUId);
+                        caseToDelete.WorkflowState = Constants.WorkflowStates.Retracted;
+                        await caseToDelete.Update(_dbContext);
+                    }
+                }
+
                 var mainElement = await _sdkCore.TemplateRead(message.RelatedEFormId);
                 var folderId = dbContext.folders.Single(x => x.Id == item.eFormSdkFolderId).MicrotingUid.ToString();
 
-                var planningCases = await _dbContext.PlanningCases.Where(x => x.ItemId == item.Id && x.WorkflowState != Constants.WorkflowStates.Retracted).ToListAsync();
+                var planningCases = await _dbContext.PlanningCases
+                    .Where(x => x.ItemId == item.Id && x.WorkflowState != Constants.WorkflowStates.Retracted)
+                    .ToListAsync();
                 foreach (PlanningCase cPlanningCase in planningCases)
                 {
                     cPlanningCase.WorkflowState = Constants.WorkflowStates.Retracted;
@@ -85,10 +111,14 @@ namespace ServiceItemsPlanningPlugin.Handlers
                 foreach (var siteId in siteIds)
                 {
                     var casesToDelete = await _dbContext.PlanningCaseSites.
-                        Where(x => x.ItemId == item.Id && x.MicrotingSdkSiteId == siteId && x.WorkflowState != Constants.WorkflowStates.Retracted).ToListAsync();
+                        Where(x => x.ItemId == item.Id
+                                   && x.MicrotingSdkSiteId == siteId
+                                   && x.WorkflowState != Constants.WorkflowStates.Retracted).ToListAsync();
+                    Log.LogEvent($"ItemCaseCreateHandler.Task: Found {casesToDelete.Count} PlanningCaseSites, which has not yet been retracted, so retracting now.");
 
                     foreach (var caseToDelete in casesToDelete)
                     {
+                        Log.LogEvent($"ItemCaseCreateHandler.Task: Trying to retract the case with Id: {caseToDelete.Id}");
                         var caseDto = await _sdkCore.CaseLookupCaseId(caseToDelete.MicrotingSdkCaseId);
                         if (caseDto.MicrotingUId != null) await _sdkCore.CaseDelete((int) caseDto.MicrotingUId);
                         caseToDelete.WorkflowState = Constants.WorkflowStates.Retracted;
