@@ -71,6 +71,7 @@ namespace ServiceItemsPlanningPlugin.Scheduler.Jobs
             Log.LogEvent("SearchListJob.Task: SearchListJob.Execute got called");
             var now = DateTime.UtcNow;
             var lastDayOfMonth = new DateTime(now.Year, now.Month, 1).AddMonths(1).AddDays(-1).Day;
+            var firstDayOfMonth = new DateTime(now.Year, now.Month, 1).Day;
 
 
             var baseQuery = _dbContext.Plannings.Where(x =>
@@ -90,7 +91,7 @@ namespace ServiceItemsPlanningPlugin.Scheduler.Jobs
             var monthlyListsQuery = baseQuery
                 .Where(x => x.RepeatType == RepeatType.Month 
                             && (x.LastExecutedTime == null || 
-                                ((x.DayOfMonth <= now.Day || now.Day == lastDayOfMonth) &&
+                                ((x.DayOfMonth <= now.Day || now.Day == firstDayOfMonth) &&
                                  ((now.Month - x.LastExecutedTime.Value.Month) + 12 * (now.Year - x.LastExecutedTime.Value.Year) >= x.RepeatEvery))));
             
 //            Console.WriteLine($"Daily lists query: {dailyListsQuery.ToSql()}");
