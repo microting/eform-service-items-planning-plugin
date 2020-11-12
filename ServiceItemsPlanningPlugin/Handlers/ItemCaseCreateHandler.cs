@@ -22,6 +22,9 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+using Microting.eForm.Infrastructure;
+using Microting.eFormApi.BasePn.Infrastructure.Helpers;
+
 namespace ServiceItemsPlanningPlugin.Handlers
 {
     using System;
@@ -50,6 +53,7 @@ namespace ServiceItemsPlanningPlugin.Handlers
         {
             var item = await _dbContext.Items.SingleOrDefaultAsync(x => x.Id == message.ItemId);
 
+            await using MicrotingDbContext dbContext = _sdkCore.dbContextHelper.GetDbContext();
             if (item != null)
             {
                 var planning = await _dbContext.Plannings
@@ -61,17 +65,42 @@ namespace ServiceItemsPlanningPlugin.Handlers
                     .Select(x => x.SiteId)
                     .ToList();
 
-                var mainElement = await _sdkCore.TemplateRead(message.RelatedEFormId);
-                var folderId = GetFolderId(message.Name).ToString();
+                var removedSiteIds = planning.PlanningSites
+                    .Where(x => x.WorkflowState == Constants.WorkflowStates.Removed)
+                    .Select(x => x.SiteId)
+                    .ToList();
 
-                var planningCase = await _dbContext.PlanningCases.SingleOrDefaultAsync(x => x.ItemId == item.Id && x.WorkflowState != Constants.WorkflowStates.Retracted);
-                if (planningCase != null)
+                foreach (var siteId in removedSiteIds)
                 {
-                    planningCase.WorkflowState = Constants.WorkflowStates.Retracted;
-                    await planningCase.Update(_dbContext);    
+                    Log.LogEvent($"ItemCaseCreateHandler.Task: Found {removedSiteIds.Count} sites, which has been removed, so checking for PlanningCaseSites which has not yet been retracted.");
+                    var casesToDelete = await _dbContext.PlanningCaseSites.Where(x =>
+                        x.ItemId == item.Id && x.MicrotingSdkSiteId == siteId &&
+                        x.WorkflowState != Constants.WorkflowStates.Retracted).ToListAsync();
+
+                    Log.LogEvent($"ItemCaseCreateHandler.Task: Found {casesToDelete.Count} PlanningCaseSites, which has not yet been retracted, so retracting now.");
+                    foreach (var caseToDelete in casesToDelete)
+                    {
+                        Log.LogEvent($"ItemCaseCreateHandler.Task: Trying to retract the case with Id: {caseToDelete.Id}");
+                        var caseDto = await _sdkCore.CaseLookupCaseId(caseToDelete.MicrotingSdkCaseId);
+                        if (caseDto.MicrotingUId != null) await _sdkCore.CaseDelete((int) caseDto.MicrotingUId);
+                        caseToDelete.WorkflowState = Constants.WorkflowStates.Retracted;
+                        await caseToDelete.Update(_dbContext);
+                    }
+                }
+
+                var mainElement = await _sdkCore.TemplateRead(message.RelatedEFormId);
+                var folderId = dbContext.folders.Single(x => x.Id == item.eFormSdkFolderId).MicrotingUid.ToString();
+
+                var planningCases = await _dbContext.PlanningCases
+                    .Where(x => x.ItemId == item.Id && x.WorkflowState != Constants.WorkflowStates.Retracted)
+                    .ToListAsync();
+                foreach (PlanningCase cPlanningCase in planningCases)
+                {
+                    cPlanningCase.WorkflowState = Constants.WorkflowStates.Retracted;
+                    await cPlanningCase.Update(_dbContext);
                 }
                 
-                planningCase = new PlanningCase()
+                PlanningCase planningCase = new PlanningCase()
                 {
                     ItemId = item.Id,
                     Status = 66,
@@ -81,11 +110,15 @@ namespace ServiceItemsPlanningPlugin.Handlers
 
                 foreach (var siteId in siteIds)
                 {
-                    var casesToDelete = _dbContext.PlanningCaseSites.
-                        Where(x => x.ItemId == item.Id && x.MicrotingSdkSiteId == siteId && x.WorkflowState != Constants.WorkflowStates.Retracted);
+                    var casesToDelete = await _dbContext.PlanningCaseSites.
+                        Where(x => x.ItemId == item.Id
+                                   && x.MicrotingSdkSiteId == siteId
+                                   && x.WorkflowState != Constants.WorkflowStates.Retracted).ToListAsync();
+                    Log.LogEvent($"ItemCaseCreateHandler.Task: Found {casesToDelete.Count} PlanningCaseSites, which has not yet been retracted, so retracting now.");
 
                     foreach (var caseToDelete in casesToDelete)
                     {
+                        Log.LogEvent($"ItemCaseCreateHandler.Task: Trying to retract the case with Id: {caseToDelete.Id}");
                         var caseDto = await _sdkCore.CaseLookupCaseId(caseToDelete.MicrotingSdkCaseId);
                         if (caseDto.MicrotingUId != null) await _sdkCore.CaseDelete((int) caseDto.MicrotingUId);
                         caseToDelete.WorkflowState = Constants.WorkflowStates.Retracted;
@@ -141,38 +174,6 @@ namespace ServiceItemsPlanningPlugin.Handlers
                     }
                 }
             }
-        }
-        
-        private int GetFolderId(string name)
-        {
-            var folderDtos = _sdkCore.FolderGetAll(true).Result;
-
-            var folderAlreadyExist = false;
-            var microtingUId = 0;
-            foreach (var folderDto in folderDtos)
-            {
-                if (folderDto.Name == name)
-                {
-                    folderAlreadyExist = true;
-                    if (folderDto.MicrotingUId != null) microtingUId = (int) folderDto.MicrotingUId;
-                }
-            }
-
-            if (!folderAlreadyExist)
-            {
-                _sdkCore.FolderCreate(name, "", null);
-                folderDtos = _sdkCore.FolderGetAll(true).Result;
-                
-                foreach (var folderDto in folderDtos)
-                {
-                    if (folderDto.Name == name)
-                    {
-                        if (folderDto.MicrotingUId != null) microtingUId = (int) folderDto.MicrotingUId;
-                    }
-                }
-            }
-
-            return microtingUId;
         }
     }
 }

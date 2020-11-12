@@ -125,7 +125,7 @@ namespace ServiceItemsPlanningPlugin
                 }
                 
                 
-                var pluginDbName = $"Initial Catalog={dbPrefix}_eform-angular-itemsplanning-plugin;";
+                var pluginDbName = $"Initial Catalog={dbPrefix}_eform-angular-items-planning-plugin;";
                 var connectionString = sdkConnectionString.Replace(dbNameSection, pluginDbName);
 
 

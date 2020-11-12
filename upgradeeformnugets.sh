@@ -7,6 +7,7 @@ if (( "$GIT_STATUS" > 0 )); then
 	cd ServiceItemsPlanningPlugin
 
 	dotnet add ServiceItemsPlanningPlugin.csproj package Microting.eForm
+	dotnet add ServiceItemsPlanningPlugin.csproj package Microting.eFormApi.BasePn
 	dotnet add ServiceItemsPlanningPlugin.csproj package Microting.ItemsPlanningBase
 
 	EFORM_VERSION=`dotnet list package | grep 'Microting.eForm ' | cut -c64-71`
@@ -28,7 +29,7 @@ if (( "$GIT_STATUS" > 0 )); then
 		NEW_GIT_VERSION="v$MAJOR_VERSION.$MINOR_VERSION.$BUILD_VERSION"
 		git tag "$NEW_GIT_VERSION"
 		git push --tags
-		git push	
+		git push
 		echo "Updated Microting eForm to ${EFORM_VERSION} and pushed new version ${NEW_GIT_VERSION}"
 	fi
 else

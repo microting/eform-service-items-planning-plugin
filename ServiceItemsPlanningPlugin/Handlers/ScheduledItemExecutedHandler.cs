@@ -22,9 +22,10 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+using Microting.eFormApi.BasePn.Infrastructure.Helpers;
+
 namespace ServiceItemsPlanningPlugin.Handlers
 {
-    using System;
     using System.Linq;
     using System.Threading.Tasks;
     using Infrastructure.Helpers;
@@ -38,12 +39,10 @@ namespace ServiceItemsPlanningPlugin.Handlers
     public class ScheduledItemExecutedHandler : IHandleMessages<ScheduledItemExecuted>
     {
         private readonly ItemsPlanningPnDbContext _dbContext;
-        private readonly eFormCore.Core _sdkCore;
         private readonly IBus _bus;
 
-        public ScheduledItemExecutedHandler(eFormCore.Core sdkCore, DbContextHelper dbContextHelper, IBus bus)
+        public ScheduledItemExecutedHandler(DbContextHelper dbContextHelper, IBus bus)
         {
-            _sdkCore = sdkCore;
             _dbContext = dbContextHelper.GetDbContext();
             _bus = bus;
         }
@@ -59,52 +58,16 @@ namespace ServiceItemsPlanningPlugin.Handlers
                 .Where(x => x.WorkflowState != Constants.WorkflowStates.Removed)
                 .Select(x => x.SiteId)
                 .ToList();
-                
-
-            var mainElement = _sdkCore.TemplateRead(planning.RelatedEFormId);
-            var folderId = getFolderId(planning.Name).ToString();
 
             if (!siteIds.Any())
             {
-                Console.WriteLine("SiteIds not set");
+                Log.LogEvent("ScheduledItemExecutedHandler.Task: SiteIds not set");
                 return;
             }
 
-            Console.WriteLine($"SiteIds {siteIds}");
+            Log.LogEvent($"ScheduledItemExecutedHandler.Task: SiteIds {siteIds}");
 
             await _bus.SendLocal(new ItemCaseCreate(planning.Id, planning.Item.Id, planning.RelatedEFormId, planning.Name));
-        }
-
-        private int getFolderId(string name)
-        {
-            var folderDtos = _sdkCore.FolderGetAll(true).Result;
-
-            var folderAlreadyExist = false;
-            var microtingUId = 0;
-            foreach (var folderDto in folderDtos)
-            {
-                if (folderDto.Name == name)
-                {
-                    folderAlreadyExist = true;
-                    microtingUId = (int)folderDto.MicrotingUId;
-                }
-            }
-
-            if (!folderAlreadyExist)
-            {
-                _sdkCore.FolderCreate(name, "", null);
-                folderDtos = _sdkCore.FolderGetAll(true).Result;
-                
-                foreach (var folderDto in folderDtos)
-                {
-                    if (folderDto.Name == name)
-                    {
-                        microtingUId = (int)folderDto.MicrotingUId;
-                    }
-                }
-            }
-
-            return microtingUId;
         }
     }
 }
