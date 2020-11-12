@@ -74,9 +74,13 @@ namespace ServiceItemsPlanningPlugin.Scheduler.Jobs
             var firstDayOfMonth = new DateTime(now.Year, now.Month, 1).Day;
 
 
-            var baseQuery = _dbContext.Plannings.Where(x =>
-                (x.RepeatUntil == null || DateTime.UtcNow <= x.RepeatUntil) &&
-                x.WorkflowState != Constants.WorkflowStates.Removed);
+            var baseQuery = _dbContext.Plannings
+                .Where(x =>
+                    (x.RepeatUntil == null || DateTime.UtcNow <= x.RepeatUntil)
+                    &&
+                    (DateTime.UtcNow >= x.StartDate)
+                    &&
+                    x.WorkflowState != Constants.WorkflowStates.Removed);
 
             var dailyListsQuery = baseQuery
                 .Where(x => x.RepeatType == RepeatType.Day 
