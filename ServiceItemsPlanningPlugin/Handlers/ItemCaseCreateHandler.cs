@@ -52,7 +52,6 @@ namespace ServiceItemsPlanningPlugin.Handlers
         public async Task Handle(ItemCaseCreate message)
         {
             var item = await _dbContext.Items.SingleOrDefaultAsync(x => x.Id == message.ItemId);
-
             await using MicrotingDbContext dbContext = _sdkCore.dbContextHelper.GetDbContext();
             if (item != null)
             {
@@ -144,6 +143,12 @@ namespace ServiceItemsPlanningPlugin.Handlers
                     mainElement.CheckListFolderName = folderId;
                     mainElement.StartDate = DateTime.Now.ToUniversalTime();
                     mainElement.EndDate = DateTime.Now.AddYears(10).ToUniversalTime();
+
+                    long unixTimestamp = (long)(DateTime.UtcNow
+                        .Subtract(new DateTime(1970, 1, 1)))
+                        .TotalSeconds;
+
+                    mainElement.ElementList[0].Description.InderValue = unixTimestamp.ToString();
 
                     var planningCaseSite =
                         await _dbContext.PlanningCaseSites.SingleOrDefaultAsync(x => x.PlanningCaseId == planningCase.Id && x.MicrotingSdkSiteId == siteId);

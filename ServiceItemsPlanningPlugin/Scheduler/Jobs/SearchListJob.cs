@@ -75,6 +75,8 @@ namespace ServiceItemsPlanningPlugin.Scheduler.Jobs
 
 
             var baseQuery = _dbContext.Plannings
+                .Include(x => x.PlanningSites
+                    .Where(y => y.WorkflowState != Constants.WorkflowStates.Removed))
                 .Where(x =>
                     (x.RepeatUntil == null || DateTime.UtcNow <= x.RepeatUntil)
                     &&
@@ -106,6 +108,12 @@ namespace ServiceItemsPlanningPlugin.Scheduler.Jobs
             var weeklyPlannings = await weeklyListsQuery.ToListAsync();
             var monthlyPlannings = await monthlyListsQuery.ToListAsync();
 
+            // Find plannings where site not executed
+            var newPlanningSites = await baseQuery
+                .Where(x => x.LastExecutedTime != null)
+                .Where(x => x.PlanningSites.Any(y => y.LastExecutedTime == null))
+                .ToListAsync();
+
             Log.LogEvent($"SearchListJob.Task: Found {dailyPlannings.Count} daily plannings");
             Log.LogEvent($"SearchListJob.Task: Found {weeklyPlannings.Count} weekly plannings");
             Log.LogEvent($"SearchListJob.Task: Found {monthlyPlannings.Count} monthly plannings");
@@ -118,11 +126,38 @@ namespace ServiceItemsPlanningPlugin.Scheduler.Jobs
             foreach (var planning in scheduledItemPlannings)
             {
                 planning.LastExecutedTime = now;
+
                 await planning.Update(_dbContext);
+
+                foreach (var planningSite in planning.PlanningSites)
+                {
+                    planningSite.LastExecutedTime = now;
+                    await planningSite.Update(_dbContext);
+                }
 
                 await _bus.SendLocal(new ScheduledItemExecuted(planning.Id));
 
                 Log.LogEvent($"SearchListJob.Task: Planning {planning.Name} executed");
+            }
+
+            // new plannings
+            foreach (var newPlanningSite in newPlanningSites)
+            {
+                if (scheduledItemPlannings.All(x => x.Id != newPlanningSite.Id))
+                {
+                    foreach (var planningSite in newPlanningSite.PlanningSites)
+                    {
+                        if (planningSite.LastExecutedTime == null)
+                        {
+                            planningSite.LastExecutedTime = now;
+                            await planningSite.Update(_dbContext);
+
+                            await _bus.SendLocal(new ScheduledItemExecuted(newPlanningSite.Id, planningSite.SiteId));
+                            Log.LogEvent(
+                                $"SearchListJob.Task: Planning {newPlanningSite.Name} executed with PlanningSite {planningSite.SiteId}");
+                        }
+                    }
+                }
             }
         }
     }

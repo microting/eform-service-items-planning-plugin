@@ -1,4 +1,4 @@
-﻿/*
+/*
 The MIT License (MIT)
 
 Copyright (c) 2007 - 2020 Microting A/S
@@ -21,17 +21,22 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
-
 namespace ServiceItemsPlanningPlugin.Messages
 {
-    public class ScheduledItemExecuted
+    public class ItemCaseSingleCreate
     {
+        public int ItemId { get; }
         public int PlanningId { get; }
-        public int? PlanningSiteId { get; }
+        public int PlanningSiteId { get; }
+        public int RelatedEFormId { get; set; }
+        public string Name { get; set; }
 
-        public ScheduledItemExecuted(int planningId, int? planningSiteId = null)
+        public ItemCaseSingleCreate(int planningId, int itemId, int relatedEFormId, string name, int planningSiteId)
         {
             PlanningId = planningId;
+            ItemId = itemId;
+            RelatedEFormId = relatedEFormId;
+            Name = name;
             PlanningSiteId = planningSiteId;
         }
     }

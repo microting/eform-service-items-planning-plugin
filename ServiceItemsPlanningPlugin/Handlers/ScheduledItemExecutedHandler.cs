@@ -67,7 +67,14 @@ namespace ServiceItemsPlanningPlugin.Handlers
 
             Log.LogEvent($"ScheduledItemExecutedHandler.Task: SiteIds {siteIds}");
 
-            await _bus.SendLocal(new ItemCaseCreate(planning.Id, planning.Item.Id, planning.RelatedEFormId, planning.Name));
+            if (message.PlanningSiteId.HasValue)
+            {
+                await _bus.SendLocal(new ItemCaseSingleCreate(planning.Id, planning.Item.Id, planning.RelatedEFormId, planning.Name, message.PlanningSiteId.Value));
+            }
+            else
+            {
+                await _bus.SendLocal(new ItemCaseCreate(planning.Id, planning.Item.Id, planning.RelatedEFormId, planning.Name));
+            }
         }
     }
 }
