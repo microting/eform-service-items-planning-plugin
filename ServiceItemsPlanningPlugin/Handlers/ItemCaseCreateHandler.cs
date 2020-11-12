@@ -144,12 +144,6 @@ namespace ServiceItemsPlanningPlugin.Handlers
                     mainElement.StartDate = DateTime.Now.ToUniversalTime();
                     mainElement.EndDate = DateTime.Now.AddYears(10).ToUniversalTime();
 
-                    long unixTimestamp = (long)(DateTime.UtcNow
-                        .Subtract(new DateTime(1970, 1, 1)))
-                        .TotalSeconds;
-
-                    mainElement.ElementList[0].Description.InderValue = unixTimestamp.ToString();
-
                     var planningCaseSite =
                         await _dbContext.PlanningCaseSites.SingleOrDefaultAsync(x => x.PlanningCaseId == planningCase.Id && x.MicrotingSdkSiteId == siteId);
 
@@ -165,6 +159,15 @@ namespace ServiceItemsPlanningPlugin.Handlers
                         };
 
                         await planningCaseSite.Create(_dbContext);
+                    }
+
+                    if (planningCaseSite.MicrotingSdkCaseDoneAt.HasValue)
+                    {
+                        long unixTimestamp = (long)(planningCaseSite.MicrotingSdkCaseDoneAt.Value
+                                .Subtract(new DateTime(1970, 1, 1)))
+                            .TotalSeconds;
+
+                        mainElement.ElementList[0].Description.InderValue = unixTimestamp.ToString();
                     }
 
                     if (planningCaseSite.MicrotingSdkCaseId >= 1) continue;
