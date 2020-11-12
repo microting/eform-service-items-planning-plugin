@@ -13,12 +13,12 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.EntityFrameworkCore.Proxies" Version="3.1.8" />
     <PackageReference Include="Microsoft.Extensions.DependencyModel" Version="3.1.6" />
-    <PackageReference Include="Microting.eForm" Version="4.0.21" />
-    <PackageReference Include="Microting.ItemsPlanningBase" Version="2.0.20" />
+    <PackageReference Include="Microting.eForm" Version="4.0.33" />
+    <PackageReference Include="Microting.ItemsPlanningBase" Version="2.0.40" />
     <PackageReference Include="Microting.WindowsService.BasePn" Version="2.0.0" />
-    <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="3.1.2" />
+    <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="3.2.3" />
     <PackageReference Include="System.ComponentModel.Composition" Version="4.7.0" />
-    <PackageReference Include="Microting.eFormApi.BasePn" Version="2.0.22" />
+    <PackageReference Include="Microting.eFormApi.BasePn" Version="2.0.40" />
   </ItemGroup>
 
 </Project>
