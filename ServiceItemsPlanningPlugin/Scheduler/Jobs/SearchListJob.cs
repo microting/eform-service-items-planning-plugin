@@ -22,6 +22,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+using Microting.eFormApi.BasePn.Infrastructure.Helpers;
+
 namespace ServiceItemsPlanningPlugin.Scheduler.Jobs
 {
     using System;
@@ -50,14 +52,37 @@ namespace ServiceItemsPlanningPlugin.Scheduler.Jobs
 
         public async Task Execute()
         {
-            Console.WriteLine("SearchListJob.Execute got called");
+            int startTime = int.Parse(_dbContext.PluginConfigurationValues
+                .Single(x => x.Name == "ItemsPlanningBaseSettings:StartTime").Value);
+            int endTime = int.Parse(_dbContext.PluginConfigurationValues
+                .Single(x => x.Name == "ItemsPlanningBaseSettings:EndTime").Value);
+            if (DateTime.UtcNow.Hour < startTime)
+            {
+                Log.LogEvent($"SearchListJob.Task: The current hour is smaller than the start time of {startTime}, so ending processing");
+                return;
+            }
+
+            if (DateTime.UtcNow.Hour > endTime)
+            {
+                Log.LogEvent($"SearchListJob.Task: The current hour is bigger than the end time of {endTime}, so ending processing");
+                return;
+            }
+
+            Log.LogEvent("SearchListJob.Task: SearchListJob.Execute got called");
             var now = DateTime.UtcNow;
             var lastDayOfMonth = new DateTime(now.Year, now.Month, 1).AddMonths(1).AddDays(-1).Day;
+            var firstDayOfMonth = new DateTime(now.Year, now.Month, 1).Day;
 
 
-            var baseQuery = _dbContext.Plannings.Where(x =>
-                (x.RepeatUntil == null || DateTime.UtcNow <= x.RepeatUntil) &&
-                x.WorkflowState != Constants.WorkflowStates.Removed);
+            var baseQuery = _dbContext.Plannings
+                .Include(x => x.PlanningSites
+                    .Where(y => y.WorkflowState != Constants.WorkflowStates.Removed))
+                .Where(x =>
+                    (x.RepeatUntil == null || DateTime.UtcNow <= x.RepeatUntil)
+                    &&
+                    (DateTime.UtcNow >= x.StartDate)
+                    &&
+                    x.WorkflowState != Constants.WorkflowStates.Removed);
 
             var dailyListsQuery = baseQuery
                 .Where(x => x.RepeatType == RepeatType.Day 
@@ -72,7 +97,7 @@ namespace ServiceItemsPlanningPlugin.Scheduler.Jobs
             var monthlyListsQuery = baseQuery
                 .Where(x => x.RepeatType == RepeatType.Month 
                             && (x.LastExecutedTime == null || 
-                                ((x.DayOfMonth <= now.Day || now.Day == lastDayOfMonth) &&
+                                ((x.DayOfMonth <= now.Day || now.Day == firstDayOfMonth) &&
                                  ((now.Month - x.LastExecutedTime.Value.Month) + 12 * (now.Year - x.LastExecutedTime.Value.Year) >= x.RepeatEvery))));
             
 //            Console.WriteLine($"Daily lists query: {dailyListsQuery.ToSql()}");
@@ -83,9 +108,15 @@ namespace ServiceItemsPlanningPlugin.Scheduler.Jobs
             var weeklyPlannings = await weeklyListsQuery.ToListAsync();
             var monthlyPlannings = await monthlyListsQuery.ToListAsync();
 
-            Console.WriteLine($"Found {dailyPlannings.Count} daily plannings");
-            Console.WriteLine($"Found {weeklyPlannings.Count} weekly plannings");
-            Console.WriteLine($"Found {monthlyPlannings.Count} monthly plannings");
+            // Find plannings where site not executed
+            var newPlanningSites = await baseQuery
+                .Where(x => x.LastExecutedTime != null)
+                .Where(x => x.PlanningSites.Any(y => y.LastExecutedTime == null))
+                .ToListAsync();
+
+            Log.LogEvent($"SearchListJob.Task: Found {dailyPlannings.Count} daily plannings");
+            Log.LogEvent($"SearchListJob.Task: Found {weeklyPlannings.Count} weekly plannings");
+            Log.LogEvent($"SearchListJob.Task: Found {monthlyPlannings.Count} monthly plannings");
 
             var scheduledItemPlannings = new List<Planning>();
             scheduledItemPlannings.AddRange(dailyPlannings);
@@ -95,11 +126,38 @@ namespace ServiceItemsPlanningPlugin.Scheduler.Jobs
             foreach (var planning in scheduledItemPlannings)
             {
                 planning.LastExecutedTime = now;
+
                 await planning.Update(_dbContext);
+
+                foreach (var planningSite in planning.PlanningSites)
+                {
+                    planningSite.LastExecutedTime = now;
+                    await planningSite.Update(_dbContext);
+                }
 
                 await _bus.SendLocal(new ScheduledItemExecuted(planning.Id));
 
-                Console.WriteLine($"Planning {planning.Name} executed");
+                Log.LogEvent($"SearchListJob.Task: Planning {planning.Name} executed");
+            }
+
+            // new plannings
+            foreach (var newPlanningSite in newPlanningSites)
+            {
+                if (scheduledItemPlannings.All(x => x.Id != newPlanningSite.Id))
+                {
+                    foreach (var planningSite in newPlanningSite.PlanningSites)
+                    {
+                        if (planningSite.LastExecutedTime == null)
+                        {
+                            planningSite.LastExecutedTime = now;
+                            await planningSite.Update(_dbContext);
+
+                            await _bus.SendLocal(new ScheduledItemExecuted(newPlanningSite.Id, planningSite.SiteId));
+                            Log.LogEvent(
+                                $"SearchListJob.Task: Planning {newPlanningSite.Name} executed with PlanningSite {planningSite.SiteId}");
+                        }
+                    }
+                }
             }
         }
     }

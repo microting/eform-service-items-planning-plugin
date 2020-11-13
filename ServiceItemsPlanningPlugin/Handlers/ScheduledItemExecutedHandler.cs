@@ -22,9 +22,10 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+using Microting.eFormApi.BasePn.Infrastructure.Helpers;
+
 namespace ServiceItemsPlanningPlugin.Handlers
 {
-    using System;
     using System.Linq;
     using System.Threading.Tasks;
     using Infrastructure.Helpers;
@@ -38,12 +39,10 @@ namespace ServiceItemsPlanningPlugin.Handlers
     public class ScheduledItemExecutedHandler : IHandleMessages<ScheduledItemExecuted>
     {
         private readonly ItemsPlanningPnDbContext _dbContext;
-        private readonly eFormCore.Core _sdkCore;
         private readonly IBus _bus;
 
-        public ScheduledItemExecutedHandler(eFormCore.Core sdkCore, DbContextHelper dbContextHelper, IBus bus)
+        public ScheduledItemExecutedHandler(DbContextHelper dbContextHelper, IBus bus)
         {
-            _sdkCore = sdkCore;
             _dbContext = dbContextHelper.GetDbContext();
             _bus = bus;
         }
@@ -62,13 +61,20 @@ namespace ServiceItemsPlanningPlugin.Handlers
 
             if (!siteIds.Any())
             {
-                Console.WriteLine("SiteIds not set");
+                Log.LogEvent("ScheduledItemExecutedHandler.Task: SiteIds not set");
                 return;
             }
 
-            Console.WriteLine($"SiteIds {siteIds}");
+            Log.LogEvent($"ScheduledItemExecutedHandler.Task: SiteIds {siteIds}");
 
-            await _bus.SendLocal(new ItemCaseCreate(planning.Id, planning.Item.Id, planning.RelatedEFormId, planning.Name));
+            if (message.PlanningSiteId.HasValue)
+            {
+                await _bus.SendLocal(new ItemCaseSingleCreate(planning.Id, planning.Item.Id, planning.RelatedEFormId, planning.Name, message.PlanningSiteId.Value));
+            }
+            else
+            {
+                await _bus.SendLocal(new ItemCaseCreate(planning.Id, planning.Item.Id, planning.RelatedEFormId, planning.Name));
+            }
         }
     }
 }
