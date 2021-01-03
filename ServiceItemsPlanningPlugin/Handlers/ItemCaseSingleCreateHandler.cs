@@ -23,6 +23,7 @@ SOFTWARE.
 */
 
 using Microting.eForm.Infrastructure;
+using Microting.eForm.Infrastructure.Data.Entities;
 using Microting.eFormApi.BasePn.Infrastructure.Helpers;
 
 namespace ServiceItemsPlanningPlugin.Handlers
@@ -52,10 +53,14 @@ namespace ServiceItemsPlanningPlugin.Handlers
         public async Task Handle(ItemCaseSingleCreate message)
         {
             var item = await _dbContext.Items.SingleOrDefaultAsync(x => x.Id == message.ItemId);
-            var mainElement = await _sdkCore.TemplateRead(message.RelatedEFormId);
+            var siteId = message.PlanningSiteId;
+            await using MicrotingDbContext sdkDbContext = _sdkCore.dbContextHelper.GetDbContext();
+            var sdkSite = await sdkDbContext.Sites.SingleAsync(x => x.Id == siteId);
+            Language language = await sdkDbContext.Languages.SingleAsync(x => x.Id == sdkSite.LanguageId);
+            var mainElement = await _sdkCore.ReadeForm(message.RelatedEFormId, language);
 
             await using MicrotingDbContext dbContext = _sdkCore.dbContextHelper.GetDbContext();
-            var folderId = dbContext.folders.Single(x => x.Id == item.eFormSdkFolderId).MicrotingUid.ToString();
+            var folderId = dbContext.Folders.Single(x => x.Id == item.eFormSdkFolderId).MicrotingUid.ToString();
 
             var planningCase = await _dbContext.PlanningCases
                 .Where(x => x.WorkflowState != Constants.WorkflowStates.Removed)
@@ -75,7 +80,6 @@ namespace ServiceItemsPlanningPlugin.Handlers
                 await planningCase.Create(_dbContext);
             }
 
-            var siteId = message.PlanningSiteId;
             var casesToDelete = await _dbContext.PlanningCaseSites
                 .Where(x => x.ItemId == item.Id
                             && x.MicrotingSdkSiteId == siteId
@@ -146,8 +150,6 @@ namespace ServiceItemsPlanningPlugin.Handlers
 
             if (planningCaseSite.MicrotingSdkCaseId < 1)
             {
-                await using var sdkDbContext = _sdkCore.dbContextHelper.GetDbContext();
-                var sdkSite = await sdkDbContext.sites.SingleAsync(x => x.Id == siteId);
                 var caseId = await _sdkCore.CaseCreate(mainElement, "", (int) sdkSite.MicrotingUid, null);
                 if (caseId != null)
                 {
