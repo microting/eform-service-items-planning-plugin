@@ -1,7 +1,7 @@
 /*
 The MIT License (MIT)
 
-Copyright (c) 2007 - 2020 Microting A/S
+Copyright (c) 2007 - 2021 Microting A/S
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -49,7 +49,7 @@ namespace ServiceItemsPlanningPlugin.Handlers
             _dbContext = dbContextHelper.GetDbContext();
             _sdkCore = sdkCore;
         }
-        
+
         public async Task Handle(eFormCompleted message)
         {
             var planningCaseSite = await _dbContext.PlanningCaseSites.SingleOrDefaultAsync(x => x.MicrotingSdkCaseId == message.caseId);
@@ -68,7 +68,7 @@ namespace ServiceItemsPlanningPlugin.Handlers
 
                     planningCaseSite.MicrotingSdkCaseDoneAt = theCase.DoneAt;
                     planningCaseSite.DoneByUserId = theCase.DoneById;
-                    var worker = await sdkDbContext.workers.SingleAsync(x => x.Id == planningCaseSite.DoneByUserId);
+                    var worker = await sdkDbContext.Workers.SingleAsync(x => x.Id == planningCaseSite.DoneByUserId);
                     planningCaseSite.DoneByUserName = $"{worker.FirstName} {worker.LastName}";
                     await planningCaseSite.Update(_dbContext);
 
@@ -86,7 +86,7 @@ namespace ServiceItemsPlanningPlugin.Handlers
                         planningCase = await SetFieldValue(planningCase, theCase.Id);
                         await planningCase.Update(_dbContext);
                     }
-                
+
                     await RetractFromMicroting(planningCase.Id);
                 }
             }
@@ -96,7 +96,7 @@ namespace ServiceItemsPlanningPlugin.Handlers
         {
             var planningCaseSites =
                 _dbContext.PlanningCaseSites.Where(x => x.PlanningCaseId == itemCaseId).ToList();
-            
+
             foreach (var caseSite in planningCaseSites)
             {
                 var caseDto = await _sdkCore.CaseReadByCaseId(caseSite.MicrotingSdkCaseId);

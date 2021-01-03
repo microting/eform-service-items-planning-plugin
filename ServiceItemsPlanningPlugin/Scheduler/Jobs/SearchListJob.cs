@@ -1,7 +1,7 @@
 ﻿/*
 The MIT License (MIT)
 
-Copyright (c) 2007 - 2020 Microting A/S
+Copyright (c) 2007 - 2021 Microting A/S
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -79,21 +79,21 @@ namespace ServiceItemsPlanningPlugin.Scheduler.Jobs
                 x.WorkflowState != Constants.WorkflowStates.Removed);
 
             var dailyListsQuery = baseQuery
-                .Where(x => x.RepeatType == RepeatType.Day 
-                            && (x.LastExecutedTime == null || 
+                .Where(x => x.RepeatType == RepeatType.Day
+                            && (x.LastExecutedTime == null ||
                                 now.AddDays(-x.RepeatEvery) >= x.LastExecutedTime));
 
             var weeklyListsQuery = baseQuery
-                .Where(x => x.RepeatType == RepeatType.Week 
-                            && (x.LastExecutedTime == null || 
+                .Where(x => x.RepeatType == RepeatType.Week
+                            && (x.LastExecutedTime == null ||
                                 (now.AddDays(-x.RepeatEvery * 7) >= x.LastExecutedTime && x.DayOfWeek == now.DayOfWeek)));
 
             var monthlyListsQuery = baseQuery
-                .Where(x => x.RepeatType == RepeatType.Month 
-                            && (x.LastExecutedTime == null || 
+                .Where(x => x.RepeatType == RepeatType.Month
+                            && (x.LastExecutedTime == null ||
                                 ((x.DayOfMonth <= now.Day || now.Day == firstDayOfMonth) &&
                                  ((now.Month - x.LastExecutedTime.Value.Month) + 12 * (now.Year - x.LastExecutedTime.Value.Year) >= x.RepeatEvery))));
-            
+
 //            Console.WriteLine($"Daily lists query: {dailyListsQuery.ToSql()}");
 //            Console.WriteLine($"Weekly lists query: {weeklyListsQuery.ToSql()}");
 //            Console.WriteLine($"Monthly lists query: {monthlyListsQuery.ToSql()}");

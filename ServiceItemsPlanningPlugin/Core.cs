@@ -1,7 +1,7 @@
 /*
 The MIT License (MIT)
 
-Copyright (c) 2007 - 2020 Microting A/S
+Copyright (c) 2007 - 2021 Microting A/S
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -123,8 +123,8 @@ namespace ServiceItemsPlanningPlugin
                     dbNameSection = Regex.Match(sdkConnectionString, @"(Initial Catalog=\w*;)").Groups[0].Value;
                     dbPrefix = Regex.Match(sdkConnectionString, @"Initial Catalog=(\d*)_").Groups[1].Value;
                 }
-                
-                
+
+
                 var pluginDbName = $"Initial Catalog={dbPrefix}_eform-angular-items-planning-plugin;";
                 var connectionString = sdkConnectionString.Replace(dbNameSection, pluginDbName);
 
@@ -133,7 +133,7 @@ namespace ServiceItemsPlanningPlugin
                 {
                     _serviceLocation = serviceLocation;
                     _coreStatChanging = true;
-                    
+
                     if (string.IsNullOrEmpty(_serviceLocation))
                         throw new ArgumentException("serviceLocation is not allowed to be null or empty");
 
@@ -144,14 +144,14 @@ namespace ServiceItemsPlanningPlugin
 
                     _dbContext = contextFactory.CreateDbContext(new[] { connectionString });
                     _dbContext.Database.Migrate();
-                    
+
                     _dbContextHelper = new DbContextHelper(connectionString);
 
                     _coreAvailable = true;
                     _coreStatChanging = false;
 
                     StartSdkCoreSqlOnly(sdkConnectionString);
-                    
+
                     string temp = _dbContext.PluginConfigurationValues
                         .SingleOrDefault(x => x.Name == "ItemsPlanningBaseSettings:MaxParallelism")?.Value;
                     _maxParallelism = string.IsNullOrEmpty(temp) ? 1 : int.Parse(temp);
@@ -159,7 +159,7 @@ namespace ServiceItemsPlanningPlugin
                     temp = _dbContext.PluginConfigurationValues
                         .SingleOrDefault(x => x.Name == "ItemsPlanningBaseSettings:NumberOfWorkers")?.Value;
                     _numberOfWorkers = string.IsNullOrEmpty(temp) ? 1 : int.Parse(temp);
-                    
+
                     _container = new WindsorContainer();
                     _container.Register(Component.For<IWindsorContainer>().Instance(_container));
                     _container.Register(Component.For<DbContextHelper>().Instance(_dbContextHelper));
@@ -171,7 +171,7 @@ namespace ServiceItemsPlanningPlugin
                     _container.Register(Component.For<SearchListJob>());
 
                     _bus = _container.Resolve<IBus>();
-                    
+
                     ConfigureScheduler();
                 }
                 Console.WriteLine("ServiceItemsPlanningPlugin started");
@@ -222,7 +222,7 @@ namespace ServiceItemsPlanningPlugin
         {
             return true;
         }
-        
+
         public void StartSdkCoreSqlOnly(string sdkConnectionString)
         {
             _sdkCore = new eFormCore.Core();
@@ -233,7 +233,7 @@ namespace ServiceItemsPlanningPlugin
         private void ConfigureScheduler()
         {
             var job = _container.Resolve<SearchListJob>();
-            
+
             _scheduleTimer = new Timer(async x =>
             {
                 await job.Execute();
