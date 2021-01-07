@@ -1,7 +1,7 @@
 /*
 The MIT License (MIT)
 
-Copyright (c) 2007 - 2020 Microting A/S
+Copyright (c) 2007 - 2021 Microting A/S
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -23,6 +23,7 @@ SOFTWARE.
 */
 
 using Microting.eForm.Infrastructure;
+using Microting.eForm.Infrastructure.Data.Entities;
 using Microting.eFormApi.BasePn.Infrastructure.Helpers;
 
 namespace ServiceItemsPlanningPlugin.Handlers
@@ -42,13 +43,13 @@ namespace ServiceItemsPlanningPlugin.Handlers
     {
         private readonly ItemsPlanningPnDbContext _dbContext;
         private readonly eFormCore.Core _sdkCore;
-        
+
         public ItemCaseCreateHandler(eFormCore.Core sdkCore, DbContextHelper dbContextHelper)
         {
             _sdkCore = sdkCore;
             _dbContext = dbContextHelper.GetDbContext();
         }
-        
+
         public async Task Handle(ItemCaseCreate message)
         {
             var item = await _dbContext.Items.SingleOrDefaultAsync(x => x.Id == message.ItemId);
@@ -87,8 +88,7 @@ namespace ServiceItemsPlanningPlugin.Handlers
                     }
                 }
 
-                var mainElement = await _sdkCore.TemplateRead(message.RelatedEFormId);
-                var folderId = dbContext.folders.Single(x => x.Id == item.eFormSdkFolderId).MicrotingUid.ToString();
+
 
                 var planningCases = await _dbContext.PlanningCases
                     .Where(x => x.ItemId == item.Id && x.WorkflowState != Constants.WorkflowStates.Retracted)
@@ -98,7 +98,7 @@ namespace ServiceItemsPlanningPlugin.Handlers
                     cPlanningCase.WorkflowState = Constants.WorkflowStates.Retracted;
                     await cPlanningCase.Update(_dbContext);
                 }
-                
+
                 PlanningCase planningCase = new PlanningCase()
                 {
                     ItemId = item.Id,
@@ -123,6 +123,11 @@ namespace ServiceItemsPlanningPlugin.Handlers
                         caseToDelete.WorkflowState = Constants.WorkflowStates.Retracted;
                         await caseToDelete.Update(_dbContext);
                     }
+
+                    Site sdkSite = await dbContext.Sites.SingleAsync(x => x.Id == siteId);
+                    Language language = await dbContext.Languages.SingleAsync(x => x.Id == sdkSite.LanguageId);
+                    var mainElement = await _sdkCore.ReadeForm(message.RelatedEFormId, language);
+                    var folderId = dbContext.Folders.Single(x => x.Id == item.eFormSdkFolderId).MicrotingUid.ToString();
 
                     mainElement.Label = string.IsNullOrEmpty(item.ItemNumber) ? "" : item.ItemNumber;
                     if (!string.IsNullOrEmpty(item.Name))
@@ -172,7 +177,7 @@ namespace ServiceItemsPlanningPlugin.Handlers
 
                     if (planningCaseSite.MicrotingSdkCaseId >= 1) continue;
                     await using var sdkDbContext = _sdkCore.dbContextHelper.GetDbContext();
-                    var sdkSite = await sdkDbContext.sites.SingleAsync(x => x.Id == siteId);
+                    //var sdkSite = await sdkDbContext.Sites.SingleAsync(x => x.Id == siteId);
                     var caseId = await _sdkCore.CaseCreate(mainElement, "", (int)sdkSite.MicrotingUid, null);
                     if (caseId != null)
                     {
