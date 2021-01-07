@@ -22,8 +22,6 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-using Microting.eFormApi.BasePn.Infrastructure.Helpers;
-
 namespace ServiceItemsPlanningPlugin.Scheduler.Jobs
 {
     using System;
@@ -37,17 +35,23 @@ namespace ServiceItemsPlanningPlugin.Scheduler.Jobs
     using Microting.ItemsPlanningBase.Infrastructure.Data;
     using Microting.ItemsPlanningBase.Infrastructure.Data.Entities;
     using Microting.ItemsPlanningBase.Infrastructure.Enums;
+    using Microting.eFormApi.BasePn.Infrastructure.Helpers;
     using Rebus.Bus;
 
     public class SearchListJob : IJob
     {
         private readonly ItemsPlanningPnDbContext _dbContext;
         private readonly IBus _bus;
+        private readonly eFormCore.Core _sdkCore;
 
-        public SearchListJob(DbContextHelper dbContextHelper, IBus bus)
+        public SearchListJob(
+            DbContextHelper dbContextHelper,
+            IBus bus,
+            eFormCore.Core sdkCore)
         {
             _dbContext = dbContextHelper.GetDbContext();
             _bus = bus;
+            _sdkCore = sdkCore;
         }
 
         public async Task Execute()
@@ -123,6 +127,13 @@ namespace ServiceItemsPlanningPlugin.Scheduler.Jobs
             scheduledItemPlannings.AddRange(weeklyPlannings);
             scheduledItemPlannings.AddRange(monthlyPlannings);
 
+            await using var sdkDbContext = _sdkCore.dbContextHelper.GetDbContext();
+            var sdkSite = await sdkDbContext.Sites.SingleAsync(x => x.Id == newPlanningSites[0].PlanningSites[0].SiteId);
+            var language = await sdkDbContext.Languages.Where(x => x.Id == sdkSite.LanguageId).SingleOrDefaultAsync();
+            var translatedName = _dbContext.PlanningNameTranslation
+                .Where(x => x.WorkflowState != Constants.WorkflowStates.Removed)
+                .Where(x => x.LanguageId == language.Id);
+
             foreach (var planning in scheduledItemPlannings)
             {
                 planning.LastExecutedTime = now;
@@ -137,7 +148,9 @@ namespace ServiceItemsPlanningPlugin.Scheduler.Jobs
 
                 await _bus.SendLocal(new ScheduledItemExecuted(planning.Id));
 
-                Log.LogEvent($"SearchListJob.Task: Planning {planning.Name} executed");
+                var planningName = translatedName.SingleOrDefault(x => x.PlanningId == planning.Id)?.Name;
+
+                Log.LogEvent($"SearchListJob.Task: Planning {planningName} executed");
             }
 
             // new plannings
@@ -153,8 +166,9 @@ namespace ServiceItemsPlanningPlugin.Scheduler.Jobs
                             await planningSite.Update(_dbContext);
 
                             await _bus.SendLocal(new ScheduledItemExecuted(newPlanningSite.Id, planningSite.SiteId));
+                            var newPlanningSiteName = translatedName.SingleOrDefault(x => x.PlanningId == newPlanningSite.Id)?.Name;
                             Log.LogEvent(
-                                $"SearchListJob.Task: Planning {newPlanningSite.Name} executed with PlanningSite {planningSite.SiteId}");
+                                $"SearchListJob.Task: Planning {newPlanningSiteName} executed with PlanningSite {planningSite.SiteId}");
                         }
                     }
                 }
