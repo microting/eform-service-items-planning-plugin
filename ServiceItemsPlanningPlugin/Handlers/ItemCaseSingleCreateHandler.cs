@@ -98,10 +98,13 @@ namespace ServiceItemsPlanningPlugin.Handlers
                 await caseToDelete.Update(_dbContext);
             }
 
+            var translation = _dbContext.PlanningNameTranslation
+                .Single(x => x.LanguageId == language.Id && x.PlanningId == item.PlanningId).Name;
+
             mainElement.Label = string.IsNullOrEmpty(item.ItemNumber) ? "" : item.ItemNumber;
-            if (!string.IsNullOrEmpty(item.Name))
+            if (!string.IsNullOrEmpty(translation))
             {
-                mainElement.Label += string.IsNullOrEmpty(mainElement.Label) ? $"{item.Name}" : $" - {item.Name}";
+                mainElement.Label += string.IsNullOrEmpty(mainElement.Label) ? $"{translation}" : $" - {translation}";
             }
 
             if (!string.IsNullOrEmpty(item.BuildYear))

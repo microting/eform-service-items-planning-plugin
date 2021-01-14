@@ -53,7 +53,7 @@ namespace ServiceItemsPlanningPlugin.Handlers
         public async Task Handle(ItemCaseCreate message)
         {
             var item = await _dbContext.Items.SingleOrDefaultAsync(x => x.Id == message.ItemId);
-            await using MicrotingDbContext dbContext = _sdkCore.dbContextHelper.GetDbContext();
+            await using MicrotingDbContext microtingDbContext = _sdkCore.dbContextHelper.GetDbContext();
             if (item != null)
             {
                 var planning = await _dbContext.Plannings
@@ -124,15 +124,17 @@ namespace ServiceItemsPlanningPlugin.Handlers
                         await caseToDelete.Update(_dbContext);
                     }
 
-                    Site sdkSite = await dbContext.Sites.SingleAsync(x => x.Id == siteId);
-                    Language language = await dbContext.Languages.SingleAsync(x => x.Id == sdkSite.LanguageId);
+                    Site sdkSite = await microtingDbContext.Sites.SingleAsync(x => x.Id == siteId);
+                    Language language = await microtingDbContext.Languages.SingleAsync(x => x.Id == sdkSite.LanguageId);
                     var mainElement = await _sdkCore.ReadeForm(message.RelatedEFormId, language);
-                    var folderId = dbContext.Folders.Single(x => x.Id == item.eFormSdkFolderId).MicrotingUid.ToString();
+                    var translation = _dbContext.PlanningNameTranslation
+                        .Single(x => x.LanguageId == language.Id && x.PlanningId == item.PlanningId).Name;
+                    var folderId = microtingDbContext.Folders.Single(x => x.Id == item.eFormSdkFolderId).MicrotingUid.ToString();
 
                     mainElement.Label = string.IsNullOrEmpty(item.ItemNumber) ? "" : item.ItemNumber;
-                    if (!string.IsNullOrEmpty(item.Name))
+                    if (!string.IsNullOrEmpty(translation))
                     {
-                        mainElement.Label += string.IsNullOrEmpty(mainElement.Label) ? $"{item.Name}" : $" - {item.Name}";
+                        mainElement.Label += string.IsNullOrEmpty(mainElement.Label) ? $"{translation}" : $" - {translation}";
                     }
 
                     if (!string.IsNullOrEmpty(item.BuildYear))
