@@ -61,15 +61,6 @@ namespace ServiceItemsPlanningPlugin.Handlers
                 .Where(x => x.WorkflowState != Constants.WorkflowStates.Removed)
                 .Select(x => x.SiteId)
                 .ToList();
-            var siteId = message.PlanningSiteId;
-            await using var sdkDbContext = _sdkCore.dbContextHelper.GetDbContext();
-            var sdkSite = await sdkDbContext.Sites.SingleAsync(x => x.Id == siteId);
-            var language = await sdkDbContext.Languages.SingleAsync(x => x.Id == sdkSite.LanguageId);
-            var translatedName = _dbContext.PlanningNameTranslation
-                .Where(x => x.WorkflowState != Constants.WorkflowStates.Removed)
-                .Where(x => x.PlanningId == planning.Id)
-                .SingleOrDefault(x => x.LanguageId == language.Id)
-                ?.Name;
             if (!siteIds.Any())
             {
                 Log.LogEvent("ScheduledItemExecutedHandler.Task: SiteIds not set");
@@ -80,11 +71,11 @@ namespace ServiceItemsPlanningPlugin.Handlers
 
             if (message.PlanningSiteId.HasValue)
             {
-                await _bus.SendLocal(new ItemCaseSingleCreate(planning.Id, planning.Item.Id, planning.RelatedEFormId, translatedName, message.PlanningSiteId.Value));
+                await _bus.SendLocal(new ItemCaseSingleCreate(planning.Id, planning.Item.Id, planning.RelatedEFormId, message.PlanningSiteId.Value));
             }
             else
             {
-                await _bus.SendLocal(new ItemCaseCreate(planning.Id, planning.Item.Id, planning.RelatedEFormId, translatedName));
+                await _bus.SendLocal(new ItemCaseCreate(planning.Id, planning.Item.Id, planning.RelatedEFormId));
             }
         }
     }
