@@ -138,9 +138,10 @@ namespace ServiceItemsPlanningPlugin.Scheduler.Jobs
                 {
                     planningSite.LastExecutedTime = now;
                     await planningSite.Update(_dbContext);
+
+                    await _bus.SendLocal(new ScheduledItemExecuted(planning.Id, planningSite.SiteId));
                 }
 
-                await _bus.SendLocal(new ScheduledItemExecuted(planning.Id));
 
 
                 Log.LogEvent($"SearchListJob.Task: Planning {planning.Id} executed");
