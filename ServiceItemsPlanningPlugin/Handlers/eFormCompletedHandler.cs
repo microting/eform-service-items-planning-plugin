@@ -24,6 +24,7 @@ SOFTWARE.
 
 using Microting.eForm.Dto;
 using Microting.eForm.Infrastructure;
+using Microting.eForm.Infrastructure.Data.Entities;
 using Microting.eForm.Infrastructure.Models;
 
 namespace ServiceItemsPlanningPlugin.Handlers
@@ -57,14 +58,17 @@ namespace ServiceItemsPlanningPlugin.Handlers
             if (planningCaseSite != null)
             {
                 planningCaseSite.Status = 100;
+                await using MicrotingDbContext dbContext = _sdkCore.dbContextHelper.GetDbContext();
                 CaseDto caseDto = await _sdkCore.CaseReadByCaseId(message.caseId);
                 var microtingUId = caseDto.MicrotingUId;
                 var microtingCheckUId = caseDto.CheckUId;
+                Site site = await dbContext.Sites.SingleAsync(x => x.Id == planningCaseSite.MicrotingSdkSiteId);
+                Language language = await dbContext.Languages.SingleAsync(x => x.Id == site.LanguageId);
                 if (microtingUId != null && microtingCheckUId != null)
                 {
-                    ReplyElement theCase = await _sdkCore.CaseRead((int)microtingUId, (int)microtingCheckUId);
+                    ReplyElement theCase = await _sdkCore.CaseRead((int)microtingUId, (int)microtingCheckUId, language);
 
-                    planningCaseSite = await SetFieldValue(planningCaseSite, theCase.Id);
+                    planningCaseSite = await SetFieldValue(planningCaseSite, theCase.Id, language);
 
                     planningCaseSite.MicrotingSdkCaseDoneAt = theCase.DoneAt;
                     planningCaseSite.DoneByUserId = theCase.DoneById;
@@ -83,7 +87,7 @@ namespace ServiceItemsPlanningPlugin.Handlers
                         planningCase.WorkflowState = Constants.WorkflowStates.Processed;
                         // planningCase.DoneByUserName = $"{site.Result.FirstName} {site.Result.LastName}";
 
-                        planningCase = await SetFieldValue(planningCase, theCase.Id);
+                        planningCase = await SetFieldValue(planningCase, theCase.Id, language);
                         await planningCase.Update(_dbContext);
                     }
 
@@ -104,7 +108,7 @@ namespace ServiceItemsPlanningPlugin.Handlers
             }
         }
 
-        private async Task<PlanningCaseSite> SetFieldValue(PlanningCaseSite itemCaseSite, int caseId)
+        private async Task<PlanningCaseSite> SetFieldValue(PlanningCaseSite itemCaseSite, int caseId, Language language)
         {
             var item = _dbContext.Items.SingleOrDefault(x => x.Id == itemCaseSite.ItemId);
             var planning = _dbContext.Plannings.SingleOrDefault(x => x.Id == item.PlanningId);
@@ -113,7 +117,7 @@ namespace ServiceItemsPlanningPlugin.Handlers
                 itemCaseSite.MicrotingSdkCaseId
             };
 
-            var fieldValues = await _sdkCore.Advanced_FieldValueReadList(caseIds);
+            var fieldValues = await _sdkCore.Advanced_FieldValueReadList(caseIds, language);
 
             if (planning == null) return itemCaseSite;
             if (planning.NumberOfImagesEnabled)
@@ -134,13 +138,13 @@ namespace ServiceItemsPlanningPlugin.Handlers
             return itemCaseSite;
         }
 
-        private async Task<PlanningCase> SetFieldValue(PlanningCase itemCase, int caseId)
+        private async Task<PlanningCase> SetFieldValue(PlanningCase itemCase, int caseId, Language language)
         {
             var item = _dbContext.Items.SingleOrDefault(x => x.Id == itemCase.ItemId);
             var planning = _dbContext.Plannings.SingleOrDefault(x => x.Id == item.PlanningId);
             var caseIds = new List<int>();
             caseIds.Add(itemCase.MicrotingSdkCaseId);
-            var fieldValues = await _sdkCore.Advanced_FieldValueReadList(caseIds);
+            var fieldValues = await _sdkCore.Advanced_FieldValueReadList(caseIds, language);
 
             if (planning == null) return itemCase;
             if (planning.NumberOfImagesEnabled)
