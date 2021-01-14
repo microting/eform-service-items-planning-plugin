@@ -28,14 +28,12 @@ namespace ServiceItemsPlanningPlugin.Messages
         public int ItemId { get; }
         public int PlanningId { get; }
         public int RelatedEFormId { get; set; }
-        public string Name { get; set; }
 
-        public ItemCaseCreate(int planningId, int itemId, int relatedEFormId, string name)
+        public ItemCaseCreate(int planningId, int itemId, int relatedEFormId)
         {
             PlanningId = planningId;
             ItemId = itemId;
             RelatedEFormId = relatedEFormId;
-            Name = name;
         }
     }
 }

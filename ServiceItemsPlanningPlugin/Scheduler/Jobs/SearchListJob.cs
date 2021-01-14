@@ -142,7 +142,6 @@ namespace ServiceItemsPlanningPlugin.Scheduler.Jobs
 
                 await _bus.SendLocal(new ScheduledItemExecuted(planning.Id));
 
-
                 Log.LogEvent($"SearchListJob.Task: Planning {planning.Id} executed");
             }
 
