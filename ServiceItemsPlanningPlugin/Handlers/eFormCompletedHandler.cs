@@ -54,7 +54,7 @@ namespace ServiceItemsPlanningPlugin.Handlers
         public async Task Handle(eFormCompleted message)
         {
             var planningCaseSite = await _dbContext.PlanningCaseSites.SingleOrDefaultAsync(x => x.MicrotingSdkCaseId == message.caseId);
-            using MicrotingDbContext sdkDbContext = _sdkCore.dbContextHelper.GetDbContext();
+            await using MicrotingDbContext sdkDbContext = _sdkCore.dbContextHelper.GetDbContext();
             if (planningCaseSite != null)
             {
                 planningCaseSite.Status = 100;
