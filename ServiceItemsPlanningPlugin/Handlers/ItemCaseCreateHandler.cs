@@ -53,7 +53,7 @@ namespace ServiceItemsPlanningPlugin.Handlers
         public async Task Handle(ItemCaseCreate message)
         {
             var item = await _dbContext.Items.SingleOrDefaultAsync(x => x.Id == message.ItemId);
-            await using MicrotingDbContext microtingDbContext = _sdkCore.dbContextHelper.GetDbContext();
+            await using MicrotingDbContext microtingDbContext = _sdkCore.DbContextHelper.GetDbContext();
             if (item != null)
             {
                 var planning = await _dbContext.Plannings
@@ -178,8 +178,6 @@ namespace ServiceItemsPlanningPlugin.Handlers
                     }
 
                     if (planningCaseSite.MicrotingSdkCaseId >= 1) continue;
-                    await using var sdkDbContext = _sdkCore.dbContextHelper.GetDbContext();
-                    //var sdkSite = await sdkDbContext.Sites.SingleAsync(x => x.Id == siteId);
                     var caseId = await _sdkCore.CaseCreate(mainElement, "", (int)sdkSite.MicrotingUid, null);
                     if (caseId != null)
                     {

@@ -125,7 +125,7 @@ namespace ServiceItemsPlanningPlugin.Scheduler.Jobs
             scheduledItemPlannings.AddRange(weeklyPlannings);
             scheduledItemPlannings.AddRange(monthlyPlannings);
 
-            await using var sdkDbContext = _sdkCore.dbContextHelper.GetDbContext();
+            await using var sdkDbContext = _sdkCore.DbContextHelper.GetDbContext();
 
             foreach (var planning in scheduledItemPlannings)
             {
