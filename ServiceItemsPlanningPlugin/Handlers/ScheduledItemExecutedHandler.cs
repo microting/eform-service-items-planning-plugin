@@ -22,6 +22,9 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+using DocumentFormat.OpenXml.Spreadsheet;
+using Item = Microting.ItemsPlanningBase.Infrastructure.Data.Entities.Item;
+
 namespace ServiceItemsPlanningPlugin.Handlers
 {
     using System.Linq;
@@ -57,8 +60,9 @@ namespace ServiceItemsPlanningPlugin.Handlers
                 .Where(x => x.WorkflowState != Constants.WorkflowStates.Removed)
                 .SingleOrDefaultAsync(x => x.Id == message.PlanningId);
 
-            var siteIds = planning.PlanningSites
-                .Where(x => x.WorkflowState != Constants.WorkflowStates.Removed)
+            var siteIds = _dbContext.PlanningSites
+                .Where(x => x.WorkflowState != Constants.WorkflowStates.Removed
+                            && x.PlanningId == planning.Id)
                 .Select(x => x.SiteId)
                 .ToList();
             if (!siteIds.Any())
@@ -69,13 +73,14 @@ namespace ServiceItemsPlanningPlugin.Handlers
 
             Log.LogEvent($"ScheduledItemExecutedHandler.Task: SiteIds {siteIds}");
 
+            Item item = await _dbContext.Items.SingleAsync(x => x.PlanningId == planning.Id);
             if (message.PlanningSiteId.HasValue)
             {
-                await _bus.SendLocal(new ItemCaseSingleCreate(planning.Id, planning.Item.Id, planning.RelatedEFormId, message.PlanningSiteId.Value));
+                await _bus.SendLocal(new ItemCaseSingleCreate(planning.Id, item.Id, planning.RelatedEFormId, message.PlanningSiteId.Value));
             }
             else
             {
-                await _bus.SendLocal(new ItemCaseCreate(planning.Id, planning.Item.Id, planning.RelatedEFormId));
+                await _bus.SendLocal(new ItemCaseCreate(planning.Id, item.Id, planning.RelatedEFormId));
             }
         }
     }

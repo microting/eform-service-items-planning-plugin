@@ -60,13 +60,15 @@ namespace ServiceItemsPlanningPlugin.Handlers
                     .Where(x => x.WorkflowState != Constants.WorkflowStates.Removed)
                     .SingleOrDefaultAsync(x => x.Id == message.PlanningId);
 
-                var siteIds = planning.PlanningSites
-                    .Where(x => x.WorkflowState != Constants.WorkflowStates.Removed)
+                var siteIds = _dbContext.PlanningSites
+                    .Where(x => x.WorkflowState != Constants.WorkflowStates.Removed
+                                && x.PlanningId == planning.Id)
                     .Select(x => x.SiteId)
                     .ToList();
 
-                var removedSiteIds = planning.PlanningSites
-                    .Where(x => x.WorkflowState == Constants.WorkflowStates.Removed)
+                var removedSiteIds = _dbContext.PlanningSites
+                    .Where(x => x.WorkflowState == Constants.WorkflowStates.Removed
+                                && x.PlanningId == planning.Id)
                     .Select(x => x.SiteId)
                     .ToList();
 
