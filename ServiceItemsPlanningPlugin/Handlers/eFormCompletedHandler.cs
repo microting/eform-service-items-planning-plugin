@@ -54,16 +54,15 @@ namespace ServiceItemsPlanningPlugin.Handlers
         public async Task Handle(eFormCompleted message)
         {
             var planningCaseSite = await _dbContext.PlanningCaseSites.SingleOrDefaultAsync(x => x.MicrotingSdkCaseId == message.caseId);
-            using MicrotingDbContext sdkDbContext = _sdkCore.dbContextHelper.GetDbContext();
+            await using MicrotingDbContext sdkDbContext = _sdkCore.DbContextHelper.GetDbContext();
             if (planningCaseSite != null)
             {
                 planningCaseSite.Status = 100;
-                await using MicrotingDbContext dbContext = _sdkCore.dbContextHelper.GetDbContext();
                 CaseDto caseDto = await _sdkCore.CaseReadByCaseId(message.caseId);
                 var microtingUId = caseDto.MicrotingUId;
                 var microtingCheckUId = caseDto.CheckUId;
-                Site site = await dbContext.Sites.SingleAsync(x => x.Id == planningCaseSite.MicrotingSdkSiteId);
-                Language language = await dbContext.Languages.SingleAsync(x => x.Id == site.LanguageId);
+                Site site = await sdkDbContext.Sites.SingleAsync(x => x.Id == planningCaseSite.MicrotingSdkSiteId);
+                Language language = await sdkDbContext.Languages.SingleAsync(x => x.Id == site.LanguageId);
                 if (microtingUId != null && microtingCheckUId != null)
                 {
                     ReplyElement theCase = await _sdkCore.CaseRead((int)microtingUId, (int)microtingCheckUId, language);

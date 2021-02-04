@@ -54,13 +54,12 @@ namespace ServiceItemsPlanningPlugin.Handlers
         {
             var item = await _dbContext.Items.SingleOrDefaultAsync(x => x.Id == message.ItemId);
             var siteId = message.PlanningSiteId;
-            await using MicrotingDbContext sdkDbContext = _sdkCore.dbContextHelper.GetDbContext();
+            await using MicrotingDbContext sdkDbContext = _sdkCore.DbContextHelper.GetDbContext();
             var sdkSite = await sdkDbContext.Sites.SingleAsync(x => x.Id == siteId);
             Language language = await sdkDbContext.Languages.SingleAsync(x => x.Id == sdkSite.LanguageId);
             var mainElement = await _sdkCore.ReadeForm(message.RelatedEFormId, language);
 
-            await using MicrotingDbContext dbContext = _sdkCore.dbContextHelper.GetDbContext();
-            var folderId = dbContext.Folders.Single(x => x.Id == item.eFormSdkFolderId).MicrotingUid.ToString();
+            var folderId = sdkDbContext.Folders.Single(x => x.Id == item.eFormSdkFolderId).MicrotingUid.ToString();
 
             var planningCase = await _dbContext.PlanningCases
                 .Where(x => x.WorkflowState != Constants.WorkflowStates.Removed)

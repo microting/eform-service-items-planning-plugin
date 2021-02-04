@@ -125,7 +125,7 @@ namespace ServiceItemsPlanningPlugin.Scheduler.Jobs
             scheduledItemPlannings.AddRange(weeklyPlannings);
             scheduledItemPlannings.AddRange(monthlyPlannings);
 
-            await using var sdkDbContext = _sdkCore.dbContextHelper.GetDbContext();
+            await using var sdkDbContext = _sdkCore.DbContextHelper.GetDbContext();
 
             foreach (var planning in scheduledItemPlannings)
             {
@@ -133,8 +133,9 @@ namespace ServiceItemsPlanningPlugin.Scheduler.Jobs
 
                 await planning.Update(_dbContext);
 
-                foreach (var planningSite in planning.PlanningSites
-                    .Where(y => y.WorkflowState != Constants.WorkflowStates.Removed))
+                foreach (var planningSite in _dbContext.PlanningSites
+                    .Where(y => y.WorkflowState != Constants.WorkflowStates.Removed
+                                && y.PlanningId == planning.Id).ToList())
                 {
                     planningSite.LastExecutedTime = now;
                     await planningSite.Update(_dbContext);
