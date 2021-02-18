@@ -23,16 +23,14 @@ SOFTWARE.
 */
 namespace ServiceItemsPlanningPlugin.Messages
 {
-    public class ItemCaseCreate
+    public class PlanningCaseCreate
     {
-        public int ItemId { get; }
         public int PlanningId { get; }
         public int RelatedEFormId { get; set; }
 
-        public ItemCaseCreate(int planningId, int itemId, int relatedEFormId)
+        public PlanningCaseCreate(int planningId, int relatedEFormId)
         {
             PlanningId = planningId;
-            ItemId = itemId;
             RelatedEFormId = relatedEFormId;
         }
     }
