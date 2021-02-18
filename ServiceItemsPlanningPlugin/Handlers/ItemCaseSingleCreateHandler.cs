@@ -39,7 +39,7 @@ namespace ServiceItemsPlanningPlugin.Handlers
     using Microting.ItemsPlanningBase.Infrastructure.Data.Entities;
     using Rebus.Handlers;
 
-    public class ItemCaseSingleCreateHandler : IHandleMessages<ItemCaseSingleCreate>
+    public class ItemCaseSingleCreateHandler : IHandleMessages<PlanningCaseSingleCreate>
     {
         private readonly ItemsPlanningPnDbContext _dbContext;
         private readonly eFormCore.Core _sdkCore;
@@ -50,20 +50,20 @@ namespace ServiceItemsPlanningPlugin.Handlers
             _dbContext = dbContextHelper.GetDbContext();
         }
 
-        public async Task Handle(ItemCaseSingleCreate message)
+        public async Task Handle(PlanningCaseSingleCreate message)
         {
-            var item = await _dbContext.Items.SingleOrDefaultAsync(x => x.Id == message.ItemId);
+            var planning = await _dbContext.Plannings.SingleOrDefaultAsync(x => x.Id == message.PlanningId);
             var siteId = message.PlanningSiteId;
             await using MicrotingDbContext sdkDbContext = _sdkCore.DbContextHelper.GetDbContext();
             var sdkSite = await sdkDbContext.Sites.SingleAsync(x => x.Id == siteId);
             Language language = await sdkDbContext.Languages.SingleAsync(x => x.Id == sdkSite.LanguageId);
             var mainElement = await _sdkCore.ReadeForm(message.RelatedEFormId, language);
 
-            var folderId = sdkDbContext.Folders.Single(x => x.Id == item.eFormSdkFolderId).MicrotingUid.ToString();
+            var folderId = sdkDbContext.Folders.Single(x => x.Name == planning.SdkFolderName).MicrotingUid.ToString();
 
             var planningCase = await _dbContext.PlanningCases
                 .Where(x => x.WorkflowState != Constants.WorkflowStates.Removed)
-                .Where(x => x.ItemId == item.Id)
+                .Where(x => x.PlanningId == planning.Id)
                 .Where(x => x.Status == 66)
                 .Where(x => x.MicrotingSdkeFormId == message.RelatedEFormId)
                 .SingleOrDefaultAsync();
@@ -72,7 +72,7 @@ namespace ServiceItemsPlanningPlugin.Handlers
             {
                 planningCase = new PlanningCase()
                 {
-                    ItemId = item.Id,
+                    PlanningId = planning.Id,
                     Status = 66,
                     MicrotingSdkeFormId = message.RelatedEFormId
                 };
@@ -80,7 +80,7 @@ namespace ServiceItemsPlanningPlugin.Handlers
             }
 
             var casesToDelete = await _dbContext.PlanningCaseSites
-                .Where(x => x.ItemId == item.Id
+                .Where(x => x.PlanningId == planning.Id
                             && x.MicrotingSdkSiteId == siteId
                             && x.WorkflowState !=
                             Constants.WorkflowStates.Retracted)
@@ -98,24 +98,24 @@ namespace ServiceItemsPlanningPlugin.Handlers
             }
 
             var translation = _dbContext.PlanningNameTranslation
-                .Single(x => x.LanguageId == language.Id && x.PlanningId == item.PlanningId).Name;
+                .Single(x => x.LanguageId == language.Id && x.PlanningId == planning.Id).Name;
 
-            mainElement.Label = string.IsNullOrEmpty(item.ItemNumber) ? "" : item.ItemNumber;
+            mainElement.Label = string.IsNullOrEmpty(planning.PlanningNumber) ? "" : planning.PlanningNumber;
             if (!string.IsNullOrEmpty(translation))
             {
                 mainElement.Label += string.IsNullOrEmpty(mainElement.Label) ? $"{translation}" : $" - {translation}";
             }
 
-            if (!string.IsNullOrEmpty(item.BuildYear))
+            if (!string.IsNullOrEmpty(planning.BuildYear))
             {
                 mainElement.Label += string.IsNullOrEmpty(mainElement.Label)
-                    ? $"{item.BuildYear}"
-                    : $" - {item.BuildYear}";
+                    ? $"{planning.BuildYear}"
+                    : $" - {planning.BuildYear}";
             }
 
-            if (!string.IsNullOrEmpty(item.Type))
+            if (!string.IsNullOrEmpty(planning.Type))
             {
-                mainElement.Label += string.IsNullOrEmpty(mainElement.Label) ? $"{item.Type}" : $" - {item.Type}";
+                mainElement.Label += string.IsNullOrEmpty(mainElement.Label) ? $"{planning.Type}" : $" - {planning.Type}";
             }
 
             mainElement.ElementList[0].Label = mainElement.Label;
@@ -134,7 +134,7 @@ namespace ServiceItemsPlanningPlugin.Handlers
                     MicrotingSdkSiteId = siteId,
                     MicrotingSdkeFormId = message.RelatedEFormId,
                     Status = 66,
-                    ItemId = item.Id,
+                    PlanningId = planning.Id,
                     PlanningCaseId = planningCase.Id
                 };
 

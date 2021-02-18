@@ -39,7 +39,7 @@ namespace ServiceItemsPlanningPlugin.Handlers
     using Microting.ItemsPlanningBase.Infrastructure.Data.Entities;
     using Rebus.Handlers;
 
-    public class ItemCaseCreateHandler : IHandleMessages<ItemCaseCreate>
+    public class ItemCaseCreateHandler : IHandleMessages<PlanningCaseCreate>
     {
         private readonly ItemsPlanningPnDbContext _dbContext;
         private readonly eFormCore.Core _sdkCore;
@@ -50,16 +50,14 @@ namespace ServiceItemsPlanningPlugin.Handlers
             _dbContext = dbContextHelper.GetDbContext();
         }
 
-        public async Task Handle(ItemCaseCreate message)
+        public async Task Handle(PlanningCaseCreate message)
         {
-            var item = await _dbContext.Items.SingleOrDefaultAsync(x => x.Id == message.ItemId);
+            var planning = await _dbContext.Plannings
+                .Where(x => x.WorkflowState != Constants.WorkflowStates.Removed)
+                .SingleOrDefaultAsync(x => x.Id == message.PlanningId);
             await using MicrotingDbContext microtingDbContext = _sdkCore.DbContextHelper.GetDbContext();
-            if (item != null)
+            if (planning != null)
             {
-                var planning = await _dbContext.Plannings
-                    .Where(x => x.WorkflowState != Constants.WorkflowStates.Removed)
-                    .SingleOrDefaultAsync(x => x.Id == message.PlanningId);
-
                 var siteIds = _dbContext.PlanningSites
                     .Where(x => x.WorkflowState != Constants.WorkflowStates.Removed
                                 && x.PlanningId == planning.Id)
@@ -76,7 +74,7 @@ namespace ServiceItemsPlanningPlugin.Handlers
                 {
                     Log.LogEvent($"ItemCaseCreateHandler.Task: Found {removedSiteIds.Count} sites, which has been removed, so checking for PlanningCaseSites which has not yet been retracted.");
                     var casesToDelete = await _dbContext.PlanningCaseSites.Where(x =>
-                        x.ItemId == item.Id && x.MicrotingSdkSiteId == siteId &&
+                        x.PlanningId == planning.Id && x.MicrotingSdkSiteId == siteId &&
                         x.WorkflowState != Constants.WorkflowStates.Retracted).ToListAsync();
 
                     Log.LogEvent($"ItemCaseCreateHandler.Task: Found {casesToDelete.Count} PlanningCaseSites, which has not yet been retracted, so retracting now.");
@@ -93,7 +91,7 @@ namespace ServiceItemsPlanningPlugin.Handlers
 
 
                 var planningCases = await _dbContext.PlanningCases
-                    .Where(x => x.ItemId == item.Id && x.WorkflowState != Constants.WorkflowStates.Retracted)
+                    .Where(x => x.PlanningId == planning.Id && x.WorkflowState != Constants.WorkflowStates.Retracted)
                     .ToListAsync();
                 foreach (PlanningCase cPlanningCase in planningCases)
                 {
@@ -103,7 +101,7 @@ namespace ServiceItemsPlanningPlugin.Handlers
 
                 PlanningCase planningCase = new PlanningCase()
                 {
-                    ItemId = item.Id,
+                    PlanningId = planning.Id,
                     Status = 66,
                     MicrotingSdkeFormId = message.RelatedEFormId
                 };
@@ -112,7 +110,7 @@ namespace ServiceItemsPlanningPlugin.Handlers
                 foreach (var siteId in siteIds)
                 {
                     var casesToDelete = await _dbContext.PlanningCaseSites.
-                        Where(x => x.ItemId == item.Id
+                        Where(x => x.PlanningId == planning.Id
                                    && x.MicrotingSdkSiteId == siteId
                                    && x.WorkflowState != Constants.WorkflowStates.Retracted).ToListAsync();
                     Log.LogEvent($"ItemCaseCreateHandler.Task: Found {casesToDelete.Count} PlanningCaseSites, which has not yet been retracted, so retracting now.");
@@ -130,23 +128,23 @@ namespace ServiceItemsPlanningPlugin.Handlers
                     Language language = await microtingDbContext.Languages.SingleAsync(x => x.Id == sdkSite.LanguageId);
                     var mainElement = await _sdkCore.ReadeForm(message.RelatedEFormId, language);
                     var translation = _dbContext.PlanningNameTranslation
-                        .Single(x => x.LanguageId == language.Id && x.PlanningId == item.PlanningId).Name;
-                    var folderId = microtingDbContext.Folders.Single(x => x.Id == item.eFormSdkFolderId).MicrotingUid.ToString();
+                        .Single(x => x.LanguageId == language.Id && x.PlanningId == planning.Id).Name;
+                    var folderId = microtingDbContext.Folders.Single(x => x.Name == planning.SdkFolderName).MicrotingUid.ToString();
 
-                    mainElement.Label = string.IsNullOrEmpty(item.ItemNumber) ? "" : item.ItemNumber;
+                    mainElement.Label = string.IsNullOrEmpty(planning.PlanningNumber) ? "" : planning.PlanningNumber;
                     if (!string.IsNullOrEmpty(translation))
                     {
                         mainElement.Label += string.IsNullOrEmpty(mainElement.Label) ? $"{translation}" : $" - {translation}";
                     }
 
-                    if (!string.IsNullOrEmpty(item.BuildYear))
+                    if (!string.IsNullOrEmpty(planning.BuildYear))
                     {
-                        mainElement.Label += string.IsNullOrEmpty(mainElement.Label) ? $"{item.BuildYear}" : $" - {item.BuildYear}";
+                        mainElement.Label += string.IsNullOrEmpty(mainElement.Label) ? $"{planning.BuildYear}" : $" - {planning.BuildYear}";
                     }
 
-                    if (!string.IsNullOrEmpty(item.Type))
+                    if (!string.IsNullOrEmpty(planning.Type))
                     {
-                        mainElement.Label += string.IsNullOrEmpty(mainElement.Label) ? $"{item.Type}" : $" - {item.Type}";
+                        mainElement.Label += string.IsNullOrEmpty(mainElement.Label) ? $"{planning.Type}" : $" - {planning.Type}";
                     }
                     mainElement.ElementList[0].Label = mainElement.Label;
                     mainElement.CheckListFolderName = folderId;
@@ -163,7 +161,7 @@ namespace ServiceItemsPlanningPlugin.Handlers
                             MicrotingSdkSiteId = siteId,
                             MicrotingSdkeFormId = message.RelatedEFormId,
                             Status = 66,
-                            ItemId = item.Id,
+                            PlanningId = planning.Id,
                             PlanningCaseId = planningCase.Id
                         };
 
@@ -172,8 +170,8 @@ namespace ServiceItemsPlanningPlugin.Handlers
 
                     if (planningCaseSite.MicrotingSdkCaseDoneAt.HasValue)
                     {
-                        long unixTimestamp = (long)(planningCaseSite.MicrotingSdkCaseDoneAt.Value
-                                .Subtract(new DateTime(1970, 1, 1)))
+                        long unixTimestamp = (long)planningCaseSite.MicrotingSdkCaseDoneAt.Value
+                            .Subtract(new DateTime(1970, 1, 1))
                             .TotalSeconds;
 
                         mainElement.ElementList[0].Description.InderValue = unixTimestamp.ToString();
