@@ -107,61 +107,58 @@ namespace ServiceItemsPlanningPlugin.Handlers
             }
         }
 
-        private async Task<PlanningCaseSite> SetFieldValue(PlanningCaseSite itemCaseSite, int caseId, Language language)
+        private async Task<PlanningCaseSite> SetFieldValue(PlanningCaseSite planningCaseSite, int caseId, Language language)
         {
-            var item = _dbContext.Items.SingleOrDefault(x => x.Id == itemCaseSite.ItemId);
-            var planning = _dbContext.Plannings.SingleOrDefault(x => x.Id == item.PlanningId);
+            var planning = _dbContext.Plannings.SingleOrDefault(x => x.Id == planningCaseSite.PlanningId);
             var caseIds = new List<int>
             {
-                itemCaseSite.MicrotingSdkCaseId
+                planningCaseSite.MicrotingSdkCaseId
             };
 
             var fieldValues = await _sdkCore.Advanced_FieldValueReadList(caseIds, language);
 
-            if (planning == null) return itemCaseSite;
+            if (planning == null) return planningCaseSite;
             if (planning.NumberOfImagesEnabled)
             {
-                itemCaseSite.NumberOfImages = 0;
+                planningCaseSite.NumberOfImages = 0;
                 foreach (var fieldValue in fieldValues)
                 {
                     if (fieldValue.FieldType == Constants.FieldTypes.Picture)
                     {
                         if (fieldValue.UploadedData != null)
                         {
-                            itemCaseSite.NumberOfImages += 1;
+                            planningCaseSite.NumberOfImages += 1;
                         }
                     }
                 }
             }
 
-            return itemCaseSite;
+            return planningCaseSite;
         }
 
-        private async Task<PlanningCase> SetFieldValue(PlanningCase itemCase, int caseId, Language language)
+        private async Task<PlanningCase> SetFieldValue(PlanningCase planningCase, int caseId, Language language)
         {
-            var item = _dbContext.Items.SingleOrDefault(x => x.Id == itemCase.ItemId);
-            var planning = _dbContext.Plannings.SingleOrDefault(x => x.Id == item.PlanningId);
-            var caseIds = new List<int>();
-            caseIds.Add(itemCase.MicrotingSdkCaseId);
+            var planning = _dbContext.Plannings.SingleOrDefault(x => x.Id == planningCase.PlanningId);
+            var caseIds = new List<int> {planningCase.MicrotingSdkCaseId};
             var fieldValues = await _sdkCore.Advanced_FieldValueReadList(caseIds, language);
 
-            if (planning == null) return itemCase;
+            if (planning == null) return planningCase;
             if (planning.NumberOfImagesEnabled)
             {
-                itemCase.NumberOfImages = 0;
+                planningCase.NumberOfImages = 0;
                 foreach (var fieldValue in fieldValues)
                 {
                     if (fieldValue.FieldType == Constants.FieldTypes.Picture)
                     {
                         if (fieldValue.UploadedData != null)
                         {
-                            itemCase.NumberOfImages += 1;
+                            planningCase.NumberOfImages += 1;
                         }
                     }
                 }
             }
 
-            return itemCase;
+            return planningCase;
         }
     }
 }
