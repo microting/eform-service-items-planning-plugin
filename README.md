@@ -1,6 +1,7 @@
 # eform-service-items-planning-plugin
-![.NET Core](https://github.com/microting/eform-service-items-planning-plugin/workflows/.NET%20Core/badge.svg)
-
+[![.NET Master](https://github.com/microting/eform-service-items-planning-plugin/actions/workflows/dotnet-core-master.yml/badge.svg)](https://github.com/microting/eform-service-items-planning-plugin/actions/workflows/dotnet-core-master.yml)
+[![Maintainability](https://api.codeclimate.com/v1/badges/bcd8b18e4bbecb1f6993/maintainability)](https://codeclimate.com/github/microting/eform-service-items-planning-plugin/maintainability)
+[![Codacy Badge](https://app.codacy.com/project/badge/Grade/f8befa503d424facbb67abee9c669dba)](https://www.codacy.com/gh/microting/eform-service-items-planning-plugin/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=microting/eform-service-items-planning-plugin&amp;utm_campaign=Badge_Grade)
 ## WARNINIG! NOT TO BE USED SEPERATLY
 
 # Plugin automatic installation
