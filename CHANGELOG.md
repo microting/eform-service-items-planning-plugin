@@ -1,0 +1,221 @@
+# Changelog
+
+## [v2.0.44](https://github.com/microting/eform-service-items-planning-plugin/tree/v2.0.44) (2021-02-24)
+
+[Full Changelog](https://github.com/microting/eform-service-items-planning-plugin/compare/v2.0.43...v2.0.44)
+
+**Implemented enhancements:**
+
+- Bump Microting.ItemsPlanningBase from 2.2.3 to 2.2.4 [\#57](https://github.com/microting/eform-service-items-planning-plugin/issues/57)
+- Bump Microting.eFormApi.BasePn from 2.0.97 to 2.0.98 [\#56](https://github.com/microting/eform-service-items-planning-plugin/issues/56)
+- Bump Microting.eForm from 4.4.1 to 4.4.2 [\#55](https://github.com/microting/eform-service-items-planning-plugin/issues/55)
+
+**Merged pull requests:**
+
+- Bump Microsoft.NET.Test.Sdk from 16.8.3 to 16.9.1 [\#54](https://github.com/microting/eform-service-items-planning-plugin/pull/54) ([dependabot-preview[bot]](https://github.com/apps/dependabot-preview))
+- Bump NUnit from 3.13.0 to 3.13.1 [\#41](https://github.com/microting/eform-service-items-planning-plugin/pull/41) ([dependabot-preview[bot]](https://github.com/apps/dependabot-preview))
+
+## [v2.0.43](https://github.com/microting/eform-service-items-planning-plugin/tree/v2.0.43) (2021-02-23)
+
+[Full Changelog](https://github.com/microting/eform-service-items-planning-plugin/compare/v2.0.42...v2.0.43)
+
+**Merged pull requests:**
+
+-  Merge Planning and Item into Planning [\#48](https://github.com/microting/eform-service-items-planning-plugin/pull/48) ([sanioooook](https://github.com/sanioooook))
+
+## [v2.0.42](https://github.com/microting/eform-service-items-planning-plugin/tree/v2.0.42) (2021-02-18)
+
+[Full Changelog](https://github.com/microting/eform-service-items-planning-plugin/compare/v2.0.41...v2.0.42)
+
+## [v2.0.41](https://github.com/microting/eform-service-items-planning-plugin/tree/v2.0.41) (2021-02-16)
+
+[Full Changelog](https://github.com/microting/eform-service-items-planning-plugin/compare/v2.0.40...v2.0.41)
+
+## [v2.0.40](https://github.com/microting/eform-service-items-planning-plugin/tree/v2.0.40) (2021-02-10)
+
+[Full Changelog](https://github.com/microting/eform-service-items-planning-plugin/compare/v2.0.39...v2.0.40)
+
+## [v2.0.39](https://github.com/microting/eform-service-items-planning-plugin/tree/v2.0.39) (2021-02-10)
+
+[Full Changelog](https://github.com/microting/eform-service-items-planning-plugin/compare/v2.0.38...v2.0.39)
+
+## [v2.0.38](https://github.com/microting/eform-service-items-planning-plugin/tree/v2.0.38) (2021-02-08)
+
+[Full Changelog](https://github.com/microting/eform-service-items-planning-plugin/compare/v2.0.37...v2.0.38)
+
+## [v2.0.37](https://github.com/microting/eform-service-items-planning-plugin/tree/v2.0.37) (2021-02-05)
+
+[Full Changelog](https://github.com/microting/eform-service-items-planning-plugin/compare/v2.0.36...v2.0.37)
+
+## [v2.0.36](https://github.com/microting/eform-service-items-planning-plugin/tree/v2.0.36) (2021-02-03)
+
+[Full Changelog](https://github.com/microting/eform-service-items-planning-plugin/compare/v2.0.35...v2.0.36)
+
+## [v2.0.35](https://github.com/microting/eform-service-items-planning-plugin/tree/v2.0.35) (2021-02-03)
+
+[Full Changelog](https://github.com/microting/eform-service-items-planning-plugin/compare/v2.0.34...v2.0.35)
+
+## [v2.0.34](https://github.com/microting/eform-service-items-planning-plugin/tree/v2.0.34) (2021-01-31)
+
+[Full Changelog](https://github.com/microting/eform-service-items-planning-plugin/compare/v2.0.33...v2.0.34)
+
+## [v2.0.33](https://github.com/microting/eform-service-items-planning-plugin/tree/v2.0.33) (2021-01-30)
+
+[Full Changelog](https://github.com/microting/eform-service-items-planning-plugin/compare/v2.0.32...v2.0.33)
+
+## [v2.0.32](https://github.com/microting/eform-service-items-planning-plugin/tree/v2.0.32) (2021-01-29)
+
+[Full Changelog](https://github.com/microting/eform-service-items-planning-plugin/compare/v2.0.31...v2.0.32)
+
+## [v2.0.31](https://github.com/microting/eform-service-items-planning-plugin/tree/v2.0.31) (2021-01-27)
+
+[Full Changelog](https://github.com/microting/eform-service-items-planning-plugin/compare/v2.0.30...v2.0.31)
+
+## [v2.0.30](https://github.com/microting/eform-service-items-planning-plugin/tree/v2.0.30) (2021-01-26)
+
+[Full Changelog](https://github.com/microting/eform-service-items-planning-plugin/compare/v2.0.29...v2.0.30)
+
+## [v2.0.29](https://github.com/microting/eform-service-items-planning-plugin/tree/v2.0.29) (2021-01-21)
+
+[Full Changelog](https://github.com/microting/eform-service-items-planning-plugin/compare/v2.0.28...v2.0.29)
+
+## [v2.0.28](https://github.com/microting/eform-service-items-planning-plugin/tree/v2.0.28) (2021-01-20)
+
+[Full Changelog](https://github.com/microting/eform-service-items-planning-plugin/compare/v2.0.27...v2.0.28)
+
+## [v2.0.27](https://github.com/microting/eform-service-items-planning-plugin/tree/v2.0.27) (2021-01-19)
+
+[Full Changelog](https://github.com/microting/eform-service-items-planning-plugin/compare/v2.0.26...v2.0.27)
+
+## [v2.0.26](https://github.com/microting/eform-service-items-planning-plugin/tree/v2.0.26) (2021-01-19)
+
+[Full Changelog](https://github.com/microting/eform-service-items-planning-plugin/compare/v2.0.25...v2.0.26)
+
+## [v2.0.25](https://github.com/microting/eform-service-items-planning-plugin/tree/v2.0.25) (2021-01-16)
+
+[Full Changelog](https://github.com/microting/eform-service-items-planning-plugin/compare/v2.0.24...v2.0.25)
+
+## [v2.0.24](https://github.com/microting/eform-service-items-planning-plugin/tree/v2.0.24) (2021-01-15)
+
+[Full Changelog](https://github.com/microting/eform-service-items-planning-plugin/compare/v2.0.23...v2.0.24)
+
+## [v2.0.23](https://github.com/microting/eform-service-items-planning-plugin/tree/v2.0.23) (2021-01-14)
+
+[Full Changelog](https://github.com/microting/eform-service-items-planning-plugin/compare/v2.0.22...v2.0.23)
+
+**Merged pull requests:**
+
+- Minor fixes [\#28](https://github.com/microting/eform-service-items-planning-plugin/pull/28) ([Gid733](https://github.com/Gid733))
+- Bump NUnit from 3.12.0 to 3.13.0 [\#13](https://github.com/microting/eform-service-items-planning-plugin/pull/13) ([dependabot-preview[bot]](https://github.com/apps/dependabot-preview))
+
+## [v2.0.22](https://github.com/microting/eform-service-items-planning-plugin/tree/v2.0.22) (2021-01-14)
+
+[Full Changelog](https://github.com/microting/eform-service-items-planning-plugin/compare/v2.0.21...v2.0.22)
+
+## [v2.0.21](https://github.com/microting/eform-service-items-planning-plugin/tree/v2.0.21) (2021-01-12)
+
+[Full Changelog](https://github.com/microting/eform-service-items-planning-plugin/compare/v2.0.20...v2.0.21)
+
+**Merged pull requests:**
+
+- Fixed name [\#12](https://github.com/microting/eform-service-items-planning-plugin/pull/12) ([Gid733](https://github.com/Gid733))
+- Bump Microting.ItemsPlanningBase from 2.0.68 to 2.0.75 [\#11](https://github.com/microting/eform-service-items-planning-plugin/pull/11) ([dependabot-preview[bot]](https://github.com/apps/dependabot-preview))
+- Bump Microting.eForm from 4.1.14 to 4.1.17 [\#10](https://github.com/microting/eform-service-items-planning-plugin/pull/10) ([dependabot-preview[bot]](https://github.com/apps/dependabot-preview))
+- Bump Microsoft.NET.Test.Sdk from 16.7.1 to 16.8.3 [\#8](https://github.com/microting/eform-service-items-planning-plugin/pull/8) ([dependabot-preview[bot]](https://github.com/apps/dependabot-preview))
+- Bump Microting.eFormApi.BasePn from 2.0.65 to 2.0.67 [\#6](https://github.com/microting/eform-service-items-planning-plugin/pull/6) ([dependabot-preview[bot]](https://github.com/apps/dependabot-preview))
+
+## [v2.0.20](https://github.com/microting/eform-service-items-planning-plugin/tree/v2.0.20) (2021-01-07)
+
+[Full Changelog](https://github.com/microting/eform-service-items-planning-plugin/compare/v2.0.19...v2.0.20)
+
+**Merged pull requests:**
+
+- Added start date and assignments [\#2](https://github.com/microting/eform-service-items-planning-plugin/pull/2) ([Gid733](https://github.com/Gid733))
+
+## [v2.0.19](https://github.com/microting/eform-service-items-planning-plugin/tree/v2.0.19) (2021-01-02)
+
+[Full Changelog](https://github.com/microting/eform-service-items-planning-plugin/compare/v2.0.18...v2.0.19)
+
+## [v2.0.18](https://github.com/microting/eform-service-items-planning-plugin/tree/v2.0.18) (2021-01-01)
+
+[Full Changelog](https://github.com/microting/eform-service-items-planning-plugin/compare/v2.0.17...v2.0.18)
+
+## [v2.0.17](https://github.com/microting/eform-service-items-planning-plugin/tree/v2.0.17) (2021-01-01)
+
+[Full Changelog](https://github.com/microting/eform-service-items-planning-plugin/compare/v2.0.16...v2.0.17)
+
+## [v2.0.16](https://github.com/microting/eform-service-items-planning-plugin/tree/v2.0.16) (2020-12-30)
+
+[Full Changelog](https://github.com/microting/eform-service-items-planning-plugin/compare/v2.0.15...v2.0.16)
+
+## [v2.0.15](https://github.com/microting/eform-service-items-planning-plugin/tree/v2.0.15) (2020-12-30)
+
+[Full Changelog](https://github.com/microting/eform-service-items-planning-plugin/compare/v2.0.14...v2.0.15)
+
+## [v2.0.14](https://github.com/microting/eform-service-items-planning-plugin/tree/v2.0.14) (2020-12-29)
+
+[Full Changelog](https://github.com/microting/eform-service-items-planning-plugin/compare/v2.0.13...v2.0.14)
+
+## [v2.0.13](https://github.com/microting/eform-service-items-planning-plugin/tree/v2.0.13) (2020-12-26)
+
+[Full Changelog](https://github.com/microting/eform-service-items-planning-plugin/compare/v2.0.12...v2.0.13)
+
+## [v2.0.12](https://github.com/microting/eform-service-items-planning-plugin/tree/v2.0.12) (2020-10-31)
+
+[Full Changelog](https://github.com/microting/eform-service-items-planning-plugin/compare/v2.0.11...v2.0.12)
+
+## [v2.0.11](https://github.com/microting/eform-service-items-planning-plugin/tree/v2.0.11) (2020-09-09)
+
+[Full Changelog](https://github.com/microting/eform-service-items-planning-plugin/compare/v2.0.10...v2.0.11)
+
+## [v2.0.10](https://github.com/microting/eform-service-items-planning-plugin/tree/v2.0.10) (2020-09-09)
+
+[Full Changelog](https://github.com/microting/eform-service-items-planning-plugin/compare/v2.0.9...v2.0.10)
+
+## [v2.0.9](https://github.com/microting/eform-service-items-planning-plugin/tree/v2.0.9) (2020-09-08)
+
+[Full Changelog](https://github.com/microting/eform-service-items-planning-plugin/compare/v2.0.8...v2.0.9)
+
+## [v2.0.8](https://github.com/microting/eform-service-items-planning-plugin/tree/v2.0.8) (2020-09-03)
+
+[Full Changelog](https://github.com/microting/eform-service-items-planning-plugin/compare/v2.0.7...v2.0.8)
+
+## [v2.0.7](https://github.com/microting/eform-service-items-planning-plugin/tree/v2.0.7) (2020-08-31)
+
+[Full Changelog](https://github.com/microting/eform-service-items-planning-plugin/compare/v2.0.6...v2.0.7)
+
+## [v2.0.6](https://github.com/microting/eform-service-items-planning-plugin/tree/v2.0.6) (2020-08-20)
+
+[Full Changelog](https://github.com/microting/eform-service-items-planning-plugin/compare/v2.0.5...v2.0.6)
+
+## [v2.0.5](https://github.com/microting/eform-service-items-planning-plugin/tree/v2.0.5) (2020-08-20)
+
+[Full Changelog](https://github.com/microting/eform-service-items-planning-plugin/compare/v2.0.4...v2.0.5)
+
+## [v2.0.4](https://github.com/microting/eform-service-items-planning-plugin/tree/v2.0.4) (2020-08-10)
+
+[Full Changelog](https://github.com/microting/eform-service-items-planning-plugin/compare/v2.0.3...v2.0.4)
+
+## [v2.0.3](https://github.com/microting/eform-service-items-planning-plugin/tree/v2.0.3) (2020-08-06)
+
+[Full Changelog](https://github.com/microting/eform-service-items-planning-plugin/compare/v2.0.2...v2.0.3)
+
+## [v2.0.2](https://github.com/microting/eform-service-items-planning-plugin/tree/v2.0.2) (2020-08-06)
+
+[Full Changelog](https://github.com/microting/eform-service-items-planning-plugin/compare/v2.0.1...v2.0.2)
+
+## [v2.0.1](https://github.com/microting/eform-service-items-planning-plugin/tree/v2.0.1) (2020-08-05)
+
+[Full Changelog](https://github.com/microting/eform-service-items-planning-plugin/compare/v2.0.0...v2.0.1)
+
+## [v2.0.0](https://github.com/microting/eform-service-items-planning-plugin/tree/v2.0.0) (2020-08-04)
+
+[Full Changelog](https://github.com/microting/eform-service-items-planning-plugin/compare/5ee7d073edeb38aacce3feb5defbf5ff288ca268...v2.0.0)
+
+**Merged pull requests:**
+
+- Reworked plugin to work with plannings [\#1](https://github.com/microting/eform-service-items-planning-plugin/pull/1) ([Gid733](https://github.com/Gid733))
+
+
+
+\* *This Changelog was automatically generated by [github_changelog_generator](https://github.com/github-changelog-generator/github-changelog-generator)*
