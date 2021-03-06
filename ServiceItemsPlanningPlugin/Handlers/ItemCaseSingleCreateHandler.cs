@@ -59,7 +59,7 @@ namespace ServiceItemsPlanningPlugin.Handlers
             Language language = await sdkDbContext.Languages.SingleAsync(x => x.Id == sdkSite.LanguageId);
             var mainElement = await _sdkCore.ReadeForm(message.RelatedEFormId, language);
 
-            var folderId = sdkDbContext.Folders.Single(x => x.Name == planning.SdkFolderName).MicrotingUid.ToString();
+            var folderId = sdkDbContext.Folders.Single(x => x.Id == planning.SdkFolderId).MicrotingUid.ToString();
 
             var planningCase = await _dbContext.PlanningCases
                 .Where(x => x.WorkflowState != Constants.WorkflowStates.Removed)
