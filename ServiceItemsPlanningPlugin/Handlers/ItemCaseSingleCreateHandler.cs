@@ -123,14 +123,14 @@ namespace ServiceItemsPlanningPlugin.Handlers
             mainElement.CheckListFolderName = folderId;
             mainElement.StartDate = DateTime.Now.ToUniversalTime();
             mainElement.EndDate = DateTime.Now.AddYears(10).ToUniversalTime();
-            mainElement.PushMessageBody = mainElement.Label;
-            mainElement.PushMessageTitle = folder.Name;
-            if (folder.ParentId != null)
-            {
-                var parentFolder = await sdkDbContext.Folders.SingleAsync(x => x.Id == folder.ParentId);
-                mainElement.PushMessageTitle = parentFolder.Name;
-                mainElement.PushMessageBody = $"{folder.Name}\n{mainElement.Label}";
-            }
+            // mainElement.PushMessageBody = mainElement.Label;
+            // mainElement.PushMessageTitle = folder.Name;
+            // if (folder.ParentId != null)
+            // {
+            //     var parentFolder = await sdkDbContext.Folders.SingleAsync(x => x.Id == folder.ParentId);
+            //     mainElement.PushMessageTitle = parentFolder.Name;
+            //     mainElement.PushMessageBody = $"{folder.Name}\n{mainElement.Label}";
+            // }
 
             var planningCaseSite =
                 await _dbContext.PlanningCaseSites.SingleOrDefaultAsync(x =>
