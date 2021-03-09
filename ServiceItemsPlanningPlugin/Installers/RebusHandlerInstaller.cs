@@ -22,6 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+
 namespace ServiceItemsPlanningPlugin.Installers
 {
     using Castle.MicroKernel.Registration;
@@ -38,6 +39,8 @@ namespace ServiceItemsPlanningPlugin.Installers
             container.Register(Component.For<IHandleMessages<ScheduledItemExecuted>>().ImplementedBy<ScheduledItemExecutedHandler>().LifestyleTransient());
             container.Register(Component.For<IHandleMessages<eFormCompleted>>().ImplementedBy<EFormCompletedHandler>().LifestyleTransient());
             container.Register(Component.For<IHandleMessages<eFormRetrieved>>().ImplementedBy<EFormRetrievedHandler>().LifestyleTransient());
+            container.Register(Component.For<IHandleMessages<EformParsedByServer>>().ImplementedBy<EformParsedByServerHandler>().LifestyleTransient());
+            container.Register(Component.For<IHandleMessages<EformParsingError>>().ImplementedBy<EformParsingErrorHandler>().LifestyleTransient());
             container.Register(Component.For<IHandleMessages<PlanningCaseCreate>>().ImplementedBy<ItemCaseCreateHandler>().LifestyleTransient());
             container.Register(Component.For<IHandleMessages<PlanningCaseSingleCreate>>().ImplementedBy<ItemCaseSingleCreateHandler>().LifestyleTransient());
         }

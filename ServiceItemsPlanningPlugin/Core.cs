@@ -70,12 +70,18 @@ namespace ServiceItemsPlanningPlugin
 
         public void eFormProcessed(object sender, EventArgs args)
         {
-            // Do nothing
+            CaseDto trigger = (CaseDto)sender;
+
+            int? caseId = trigger.MicrotingUId;
+            if (caseId != null) _bus.SendLocal(new EformParsedByServer((int) caseId));
         }
 
         public void eFormProcessingError(object sender, EventArgs args)
         {
-            // Do nothing
+            CaseDto trigger = (CaseDto)sender;
+
+            int? caseId = trigger.MicrotingUId;
+            if (caseId != null) _bus.SendLocal(new EformParsingError((int) caseId));
         }
 
         public void eFormRetrived(object sender, EventArgs args)
