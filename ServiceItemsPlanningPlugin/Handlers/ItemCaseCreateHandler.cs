@@ -80,11 +80,24 @@ namespace ServiceItemsPlanningPlugin.Handlers
                     Log.LogEvent($"ItemCaseCreateHandler.Task: Found {casesToDelete.Count} PlanningCaseSites, which has not yet been retracted, so retracting now.");
                     foreach (var caseToDelete in casesToDelete)
                     {
-                        Log.LogEvent($"ItemCaseCreateHandler.Task: Trying to retract the case with Id: {caseToDelete.Id}");
-                        var caseDto = await _sdkCore.CaseLookupCaseId(caseToDelete.MicrotingSdkCaseId);
-                        if (caseDto.MicrotingUId != null) await _sdkCore.CaseDelete((int) caseDto.MicrotingUId);
-                        caseToDelete.WorkflowState = Constants.WorkflowStates.Retracted;
-                        await caseToDelete.Update(_dbContext);
+                        try
+                        {
+                            Log.LogEvent(
+                                $"ItemCaseCreateHandler.Task: Trying to retract the case with Id: {caseToDelete.Id}");
+                            if (caseToDelete.MicrotingSdkCaseId != 0)
+                            {
+                                var caseDto = await _sdkCore.CaseLookupCaseId(caseToDelete.MicrotingSdkCaseId);
+                                if (caseDto.MicrotingUId != null) await _sdkCore.CaseDelete((int) caseDto.MicrotingUId);
+                            }
+
+                            caseToDelete.WorkflowState = Constants.WorkflowStates.Retracted;
+                            await caseToDelete.Update(_dbContext);
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine(ex.Message);
+                        }
+
                     }
                 }
 
@@ -129,7 +142,7 @@ namespace ServiceItemsPlanningPlugin.Handlers
                     var mainElement = await _sdkCore.ReadeForm(message.RelatedEFormId, language);
                     var translation = _dbContext.PlanningNameTranslation
                         .Single(x => x.LanguageId == language.Id && x.PlanningId == planning.Id).Name;
-                    var folderId = microtingDbContext.Folders.Single(x => x.Name == planning.SdkFolderName).MicrotingUid.ToString();
+                    var folderId = microtingDbContext.Folders.Single(x => x.Id == planning.SdkFolderId).MicrotingUid.ToString();
 
                     mainElement.Label = string.IsNullOrEmpty(planning.PlanningNumber) ? "" : planning.PlanningNumber;
                     if (!string.IsNullOrEmpty(translation))
