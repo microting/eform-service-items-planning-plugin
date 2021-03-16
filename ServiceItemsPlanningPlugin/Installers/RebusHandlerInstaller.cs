@@ -43,6 +43,8 @@ namespace ServiceItemsPlanningPlugin.Installers
             container.Register(Component.For<IHandleMessages<EformParsingError>>().ImplementedBy<EformParsingErrorHandler>().LifestyleTransient());
             container.Register(Component.For<IHandleMessages<PlanningCaseCreate>>().ImplementedBy<ItemCaseCreateHandler>().LifestyleTransient());
             container.Register(Component.For<IHandleMessages<PlanningCaseSingleCreate>>().ImplementedBy<ItemCaseSingleCreateHandler>().LifestyleTransient());
+            container.Register(Component.For<IHandleMessages<PushMessage>>().ImplementedBy<PushMessageHandler>()
+                .LifestyleTransient());
         }
     }
 }

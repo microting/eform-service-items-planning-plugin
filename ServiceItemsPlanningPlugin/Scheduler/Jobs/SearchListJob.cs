@@ -22,6 +22,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+using Microting.eForm.Infrastructure.Models;
+
 namespace ServiceItemsPlanningPlugin.Scheduler.Jobs
 {
     using System;
@@ -37,6 +39,15 @@ namespace ServiceItemsPlanningPlugin.Scheduler.Jobs
     using Microting.ItemsPlanningBase.Infrastructure.Enums;
     using Microting.eFormApi.BasePn.Infrastructure.Helpers;
     using Rebus.Bus;
+
+    public static class DateTimeExtensions
+    {
+        public static DateTime StartOfWeek(this DateTime dt, DayOfWeek startOfWeek)
+        {
+            int diff = (7 + (dt.DayOfWeek - startOfWeek)) % 7;
+            return dt.AddDays(-1 * diff).Date;
+        }
+    }
 
     public class SearchListJob : IJob
     {
@@ -106,9 +117,24 @@ namespace ServiceItemsPlanningPlugin.Scheduler.Jobs
 //            Console.WriteLine($"Weekly lists query: {weeklyListsQuery.ToSql()}");
 //            Console.WriteLine($"Monthly lists query: {monthlyListsQuery.ToSql()}");
 
+            var pushReady = baseQuery.
+                Where(x => !x.DoneInPeriod).
+                Where(x => x.NextExecutionTime > now).
+                Where(x => x.RepeatType != RepeatType.Day).
+                Where(x => !x.PushMessageSent);
+
             var dailyPlannings = await dailyListsQuery.ToListAsync();
             var weeklyPlannings = await weeklyListsQuery.ToListAsync();
             var monthlyPlannings = await monthlyListsQuery.ToListAsync();
+            var pushReadyPlannings = await pushReady.ToListAsync();
+
+            foreach (Planning planning in pushReadyPlannings)
+            {
+                if ((((DateTime) planning.NextExecutionTime).Date - now.Date).Days == 5)
+                {
+                    await _bus.SendLocal(new PushMessage(planning.Id));
+                }
+            }
 
             // Find plannings where site not executed
             var newPlanningSites = await baseQuery
@@ -130,6 +156,21 @@ namespace ServiceItemsPlanningPlugin.Scheduler.Jobs
             foreach (var planning in scheduledItemPlannings)
             {
                 planning.LastExecutedTime = now;
+                planning.DoneInPeriod = false;
+                planning.PushMessageSent = false;
+                if (planning.RepeatType == RepeatType.Week)
+                {
+                    var startOfWeek = new DateTime(now.Year, now.Month, now.Day, 0,0,0).StartOfWeek((DayOfWeek)planning.DayOfWeek);
+                    var nextRun = startOfWeek.AddDays(planning.RepeatEvery * 7);
+                    planning.NextExecutionTime = nextRun;
+                }
+
+                if (planning.RepeatType == RepeatType.Month)
+                {
+                    var startOfMonth = new DateTime(now.Year, now.Month, (int) planning.DayOfMonth, 0, 0, 0);
+                    var nextRun = startOfMonth.AddMonths(planning.RepeatEvery);
+                    planning.NextExecutionTime = nextRun;
+                }
 
                 await planning.Update(_dbContext);
 

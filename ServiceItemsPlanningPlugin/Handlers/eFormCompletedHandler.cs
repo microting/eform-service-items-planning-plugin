@@ -57,7 +57,6 @@ namespace ServiceItemsPlanningPlugin.Handlers
             await using MicrotingDbContext sdkDbContext = _sdkCore.DbContextHelper.GetDbContext();
             if (planningCaseSite != null)
             {
-                planningCaseSite.Status = 100;
                 CaseDto caseDto = await _sdkCore.CaseReadByCaseId(message.caseId);
                 var microtingUId = caseDto.MicrotingUId;
                 var microtingCheckUId = caseDto.CheckUId;
@@ -67,6 +66,7 @@ namespace ServiceItemsPlanningPlugin.Handlers
                 {
                     ReplyElement theCase = await _sdkCore.CaseRead((int)microtingUId, (int)microtingCheckUId, language);
 
+                    planningCaseSite.Status = 100;
                     planningCaseSite = await SetFieldValue(planningCaseSite, theCase.Id, language);
 
                     planningCaseSite.MicrotingSdkCaseDoneAt = theCase.DoneAt;
@@ -89,6 +89,11 @@ namespace ServiceItemsPlanningPlugin.Handlers
                         planningCase = await SetFieldValue(planningCase, theCase.Id, language);
                         await planningCase.Update(_dbContext);
                     }
+
+                    Planning planning =
+                        await _dbContext.Plannings.SingleOrDefaultAsync(x => x.Id == planningCase.PlanningId);
+                    planning.DoneInPeriod = true;
+                    await planning.Update(_dbContext);
 
                     await RetractFromMicroting(planningCase.Id);
                 }
