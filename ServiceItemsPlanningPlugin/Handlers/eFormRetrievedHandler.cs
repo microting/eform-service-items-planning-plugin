@@ -22,6 +22,10 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+using Microsoft.EntityFrameworkCore;
+using Microting.eForm.Infrastructure;
+using Microting.eForm.Infrastructure.Data.Entities;
+
 namespace ServiceItemsPlanningPlugin.Handlers
 {
     using System.Linq;
@@ -34,16 +38,20 @@ namespace ServiceItemsPlanningPlugin.Handlers
 
     public class EFormRetrievedHandler : IHandleMessages<eFormRetrieved>
     {
+        private readonly eFormCore.Core _sdkCore;
         private readonly ItemsPlanningPnDbContext _dbContext;
 
-        public EFormRetrievedHandler(DbContextHelper dbContextHelper)
+        public EFormRetrievedHandler(eFormCore.Core sdkCore, DbContextHelper dbContextHelper)
         {
             _dbContext = dbContextHelper.GetDbContext();
+            _sdkCore = sdkCore;
         }
 
         public async Task Handle(eFormRetrieved message)
         {
-            PlanningCaseSite planningCaseSite = _dbContext.PlanningCaseSites.SingleOrDefault(x => x.MicrotingSdkCaseId == message.caseId);
+            await using MicrotingDbContext sdkDbContext = _sdkCore.DbContextHelper.GetDbContext();
+            Case theCase = await sdkDbContext.Cases.SingleOrDefaultAsync(x => x.MicrotingUid == message.CaseId);
+            PlanningCaseSite planningCaseSite = _dbContext.PlanningCaseSites.SingleOrDefault(x => x.MicrotingSdkCaseId == theCase.Id);
             if (planningCaseSite != null)
             {
                 if (planningCaseSite.Status < 77)

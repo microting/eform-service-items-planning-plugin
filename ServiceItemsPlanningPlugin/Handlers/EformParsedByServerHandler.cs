@@ -24,6 +24,9 @@ SOFTWARE.
 
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
+using Microting.eForm.Infrastructure;
+using Microting.eForm.Infrastructure.Data.Entities;
 using Microting.ItemsPlanningBase.Infrastructure.Data;
 using Microting.ItemsPlanningBase.Infrastructure.Data.Entities;
 using Rebus.Handlers;
@@ -34,16 +37,20 @@ namespace ServiceItemsPlanningPlugin.Handlers
 {
     public class EformParsedByServerHandler : IHandleMessages<EformParsedByServer>
     {
+        private readonly eFormCore.Core _sdkCore;
         private readonly ItemsPlanningPnDbContext _dbContext;
 
-        public EformParsedByServerHandler(DbContextHelper dbContextHelper)
+        public EformParsedByServerHandler(eFormCore.Core sdkCore, DbContextHelper dbContextHelper)
         {
             _dbContext = dbContextHelper.GetDbContext();
+            _sdkCore = sdkCore;
         }
 
         public async Task Handle(EformParsedByServer message)
         {
-            PlanningCaseSite planningCaseSite = _dbContext.PlanningCaseSites.SingleOrDefault(x => x.MicrotingSdkCaseId == message.CaseId);
+            await using MicrotingDbContext sdkDbContext = _sdkCore.DbContextHelper.GetDbContext();
+            Case theCase = await sdkDbContext.Cases.SingleOrDefaultAsync(x => x.MicrotingUid == message.CaseId);
+            PlanningCaseSite planningCaseSite = _dbContext.PlanningCaseSites.SingleOrDefault(x => x.MicrotingSdkCaseId == theCase.Id);
             if (planningCaseSite != null)
             {
                 if (planningCaseSite.Status < 70)
