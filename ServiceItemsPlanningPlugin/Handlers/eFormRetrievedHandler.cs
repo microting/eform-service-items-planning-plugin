@@ -51,13 +51,17 @@ namespace ServiceItemsPlanningPlugin.Handlers
         {
             await using MicrotingDbContext sdkDbContext = _sdkCore.DbContextHelper.GetDbContext();
             Case theCase = await sdkDbContext.Cases.SingleOrDefaultAsync(x => x.MicrotingUid == message.CaseId);
-            PlanningCaseSite planningCaseSite = _dbContext.PlanningCaseSites.SingleOrDefault(x => x.MicrotingSdkCaseId == theCase.Id);
-            if (planningCaseSite != null)
+            if (theCase != null)
             {
-                if (planningCaseSite.Status < 77)
+                PlanningCaseSite planningCaseSite =
+                    await _dbContext.PlanningCaseSites.SingleOrDefaultAsync(x => x.MicrotingSdkCaseId == theCase.Id);
+                if (planningCaseSite != null)
                 {
-                    planningCaseSite.Status = 77;
-                    await planningCaseSite.Update(_dbContext);
+                    if (planningCaseSite.Status < 77)
+                    {
+                        planningCaseSite.Status = 77;
+                        await planningCaseSite.Update(_dbContext);
+                    }
                 }
             }
         }
