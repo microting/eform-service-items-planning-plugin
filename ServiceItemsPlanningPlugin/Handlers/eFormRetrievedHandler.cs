@@ -22,6 +22,10 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+using Microsoft.EntityFrameworkCore;
+using Microting.eForm.Infrastructure;
+using Microting.eForm.Infrastructure.Data.Entities;
+
 namespace ServiceItemsPlanningPlugin.Handlers
 {
     using System.Linq;
@@ -34,22 +38,30 @@ namespace ServiceItemsPlanningPlugin.Handlers
 
     public class EFormRetrievedHandler : IHandleMessages<eFormRetrieved>
     {
+        private readonly eFormCore.Core _sdkCore;
         private readonly ItemsPlanningPnDbContext _dbContext;
 
-        public EFormRetrievedHandler(DbContextHelper dbContextHelper)
+        public EFormRetrievedHandler(eFormCore.Core sdkCore, DbContextHelper dbContextHelper)
         {
             _dbContext = dbContextHelper.GetDbContext();
+            _sdkCore = sdkCore;
         }
 
         public async Task Handle(eFormRetrieved message)
         {
-            PlanningCaseSite planningCaseSite = _dbContext.PlanningCaseSites.SingleOrDefault(x => x.MicrotingSdkCaseId == message.caseId);
-            if (planningCaseSite != null)
+            await using MicrotingDbContext sdkDbContext = _sdkCore.DbContextHelper.GetDbContext();
+            Case theCase = await sdkDbContext.Cases.SingleOrDefaultAsync(x => x.MicrotingUid == message.CaseId);
+            if (theCase != null)
             {
-                if (planningCaseSite.Status < 77)
+                PlanningCaseSite planningCaseSite =
+                    await _dbContext.PlanningCaseSites.SingleOrDefaultAsync(x => x.MicrotingSdkCaseId == theCase.Id);
+                if (planningCaseSite != null)
                 {
-                    planningCaseSite.Status = 77;
-                    await planningCaseSite.Update(_dbContext);
+                    if (planningCaseSite.Status < 77)
+                    {
+                        planningCaseSite.Status = 77;
+                        await planningCaseSite.Update(_dbContext);
+                    }
                 }
             }
         }

@@ -22,21 +22,24 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+using System;
+using Castle.MicroKernel.Registration;
+using Castle.MicroKernel.SubSystems.Configuration;
+using Castle.Windsor;
+using Rebus.Config;
+
 namespace ServiceItemsPlanningPlugin.Installers
 {
-    using System;
-    using Castle.MicroKernel.Registration;
-    using Castle.MicroKernel.SubSystems.Configuration;
-    using Castle.Windsor;
-    using Rebus.Config;
-
     public class RebusInstaller: IWindsorInstaller
     {
         private readonly string _connectionString;
         private readonly int _maxParallelism;
         private readonly int _numberOfWorkers;
+        private readonly string _rabbitMqUser;
+        private readonly string _rabbitMqPassword;
+        private readonly string _rabbitMqHost;
 
-        public RebusInstaller(string connectionString, int maxParallelism, int numberOfWorkers)
+        public RebusInstaller(string connectionString, int maxParallelism, int numberOfWorkers, string rabbitMqUser, string rabbitMqPassword, string rabbitMqHost)
         {
             if (string.IsNullOrEmpty(connectionString))
             {
@@ -45,13 +48,16 @@ namespace ServiceItemsPlanningPlugin.Installers
             _connectionString = connectionString;
             _maxParallelism = maxParallelism;
             _numberOfWorkers = numberOfWorkers;
+            _rabbitMqUser = rabbitMqUser;
+            _rabbitMqPassword = rabbitMqPassword;
+            _rabbitMqHost = rabbitMqHost;
         }
 
         public void Install(IWindsorContainer container, IConfigurationStore store)
         {
             Configure.With(new CastleWindsorContainerAdapter(container))
                 .Logging(l => l.ColoredConsole())
-                .Transport(t => t.UseRabbitMq("amqp://admin:password@localhost", "eform-service-items-planning-plugin"))
+                .Transport(t => t.UseRabbitMq($"amqp://{_rabbitMqUser}:{_rabbitMqPassword}@{_rabbitMqHost}", "eform-service-items-planning-plugin"))
                 .Options(o =>
                 {
                     o.SetMaxParallelism(_maxParallelism);

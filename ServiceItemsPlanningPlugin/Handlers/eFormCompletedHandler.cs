@@ -109,6 +109,8 @@ namespace ServiceItemsPlanningPlugin.Handlers
             {
                 var caseDto = await _sdkCore.CaseReadByCaseId(caseSite.MicrotingSdkCaseId);
                 if (caseDto.MicrotingUId != null) await _sdkCore.CaseDelete((int) caseDto.MicrotingUId);
+                caseSite.WorkflowState = Constants.WorkflowStates.Retracted;
+                await caseSite.Update(_dbContext);
             }
         }
 

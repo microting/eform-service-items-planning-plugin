@@ -118,22 +118,12 @@ namespace ServiceItemsPlanningPlugin
             Console.WriteLine("ServiceItemsPlanningPlugin start called");
             try
             {
-                string dbNameSection;
-                string dbPrefix;
-                if (sdkConnectionString.ToLower().Contains("convert zero datetime"))
-                {
-                    dbNameSection = Regex.Match(sdkConnectionString, @"(Database=\w*;)").Groups[0].Value;
-                    dbPrefix = Regex.Match(sdkConnectionString, @"Database=(\d*)_").Groups[1].Value;
-                } else
-                {
-                    dbNameSection = Regex.Match(sdkConnectionString, @"(Initial Catalog=\w*;)").Groups[0].Value;
-                    dbPrefix = Regex.Match(sdkConnectionString, @"Initial Catalog=(\d*)_").Groups[1].Value;
-                }
-
+                var dbNameSection = Regex.Match(sdkConnectionString, @"(Database=\w*;)").Groups[0].Value;
+                var dbPrefix = Regex.Match(sdkConnectionString, @"Database=(\d*)_").Groups[1].Value;
 
                 var pluginDbName = $"Initial Catalog={dbPrefix}_eform-angular-items-planning-plugin;";
                 var connectionString = sdkConnectionString.Replace(dbNameSection, pluginDbName);
-
+                string rabbitmqHost = connectionString.Contains("frontend") ? $"frontend-{dbPrefix}-rabbitmq" :"localhost";
 
                 if (!_coreAvailable && !_coreStatChanging)
                 {
@@ -166,13 +156,14 @@ namespace ServiceItemsPlanningPlugin
                         .SingleOrDefault(x => x.Name == "ItemsPlanningBaseSettings:NumberOfWorkers")?.Value;
                     _numberOfWorkers = string.IsNullOrEmpty(temp) ? 1 : int.Parse(temp);
 
+
                     _container = new WindsorContainer();
                     _container.Register(Component.For<IWindsorContainer>().Instance(_container));
                     _container.Register(Component.For<DbContextHelper>().Instance(_dbContextHelper));
                     _container.Register(Component.For<eFormCore.Core>().Instance(_sdkCore));
                     _container.Install(
                         new RebusHandlerInstaller()
-                        , new RebusInstaller(connectionString, _maxParallelism, _numberOfWorkers)
+                        , new RebusInstaller(connectionString, _maxParallelism, _numberOfWorkers, "admin", "password", rabbitmqHost)
                     );
                     _container.Register(Component.For<SearchListJob>());
 
