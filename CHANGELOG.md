@@ -1,5 +1,15 @@
 # Changelog
 
+## [v2.0.68](https://github.com/microting/eform-service-items-planning-plugin/tree/v2.0.68) (2021-05-11)
+
+[Full Changelog](https://github.com/microting/eform-service-items-planning-plugin/compare/v2.0.67...v2.0.68)
+
+**Implemented enhancements:**
+
+- Bump Microting.ItemsPlanningBase from 3.0.7 to 3.0.8 [\#171](https://github.com/microting/eform-service-items-planning-plugin/issues/171)
+- Bump Microting.eFormApi.BasePn from 3.0.8 to 3.0.9 [\#170](https://github.com/microting/eform-service-items-planning-plugin/issues/170)
+- Bump Microting.eForm from 5.1.4 to 5.1.5 [\#169](https://github.com/microting/eform-service-items-planning-plugin/issues/169)
+
 ## [v2.0.67](https://github.com/microting/eform-service-items-planning-plugin/tree/v2.0.67) (2021-05-07)
 
 [Full Changelog](https://github.com/microting/eform-service-items-planning-plugin/compare/v2.0.66...v2.0.67)
@@ -129,7 +139,6 @@
 - Bump Microting.ItemsPlanningBase from 2.2.21 to 2.2.22 [\#113](https://github.com/microting/eform-service-items-planning-plugin/issues/113)
 - Bump Microting.eFormApi.BasePn from 2.0.122 to 2.0.124 [\#112](https://github.com/microting/eform-service-items-planning-plugin/issues/112)
 - Bump Microting.eForm from 4.4.31 to 4.4.33 [\#111](https://github.com/microting/eform-service-items-planning-plugin/issues/111)
-- Bump Microting.eForm from 4.4.16 to 4.4.31 [\#108](https://github.com/microting/eform-service-items-planning-plugin/issues/108)
 
 ## [v2.0.55](https://github.com/microting/eform-service-items-planning-plugin/tree/v2.0.55) (2021-04-14)
 
@@ -139,6 +148,7 @@
 
 - Bump Microting.ItemsPlanningBase from 2.2.14 to 2.2.21 [\#110](https://github.com/microting/eform-service-items-planning-plugin/issues/110)
 - Bump Microting.eFormApi.BasePn from 2.0.109 to 2.0.122 [\#109](https://github.com/microting/eform-service-items-planning-plugin/issues/109)
+- Bump Microting.eForm from 4.4.16 to 4.4.31 [\#108](https://github.com/microting/eform-service-items-planning-plugin/issues/108)
 
 ## [v2.0.54](https://github.com/microting/eform-service-items-planning-plugin/tree/v2.0.54) (2021-04-02)
 
