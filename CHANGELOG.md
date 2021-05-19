@@ -1,5 +1,15 @@
 # Changelog
 
+## [v2.0.70](https://github.com/microting/eform-service-items-planning-plugin/tree/v2.0.70) (2021-05-19)
+
+[Full Changelog](https://github.com/microting/eform-service-items-planning-plugin/compare/v2.0.69...v2.0.70)
+
+**Implemented enhancements:**
+
+- Bump Microting.ItemsPlanningBase from 3.0.10 to 3.0.11 [\#182](https://github.com/microting/eform-service-items-planning-plugin/issues/182)
+- Bump Microting.eFormApi.BasePn from 3.0.11 to 3.0.12 [\#181](https://github.com/microting/eform-service-items-planning-plugin/issues/181)
+- Bump Microting.eForm from 5.2.1 to 5.2.2 [\#180](https://github.com/microting/eform-service-items-planning-plugin/issues/180)
+
 ## [v2.0.69](https://github.com/microting/eform-service-items-planning-plugin/tree/v2.0.69) (2021-05-17)
 
 [Full Changelog](https://github.com/microting/eform-service-items-planning-plugin/compare/v2.0.68...v2.0.69)
@@ -117,7 +127,6 @@
 
 - Bump Microting.ItemsPlanningBase from 2.2.24 to 2.2.26 [\#125](https://github.com/microting/eform-service-items-planning-plugin/issues/125)
 - Bump Microting.eFormApi.BasePn from 2.0.126 to 2.0.128 [\#124](https://github.com/microting/eform-service-items-planning-plugin/issues/124)
-- Bump Microting.eForm from 4.4.35 to 4.4.37 [\#123](https://github.com/microting/eform-service-items-planning-plugin/issues/123)
 
 ## [v2.0.58](https://github.com/microting/eform-service-items-planning-plugin/tree/v2.0.58) (2021-04-14)
 
@@ -135,6 +144,7 @@
 
 **Implemented enhancements:**
 
+- Bump Microting.eForm from 4.4.35 to 4.4.37 [\#123](https://github.com/microting/eform-service-items-planning-plugin/issues/123)
 - Bump Microting.ItemsPlanningBase from 2.2.22 to 2.2.23 [\#116](https://github.com/microting/eform-service-items-planning-plugin/issues/116)
 - Bump Microting.eFormApi.BasePn from 2.0.124 to 2.0.125 [\#115](https://github.com/microting/eform-service-items-planning-plugin/issues/115)
 - Bump Microting.eForm from 4.4.33 to 4.4.34 [\#114](https://github.com/microting/eform-service-items-planning-plugin/issues/114)
