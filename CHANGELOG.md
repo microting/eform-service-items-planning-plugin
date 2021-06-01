@@ -1,5 +1,15 @@
 # Changelog
 
+## [v2.0.74](https://github.com/microting/eform-service-items-planning-plugin/tree/v2.0.74) (2021-06-01)
+
+[Full Changelog](https://github.com/microting/eform-service-items-planning-plugin/compare/v2.0.73...v2.0.74)
+
+**Implemented enhancements:**
+
+- Bump Microting.ItemsPlanningBase from 3.0.16 to 3.0.17 [\#197](https://github.com/microting/eform-service-items-planning-plugin/issues/197)
+- Bump Microting.eFormApi.BasePn from 3.0.15 to 3.0.16 [\#196](https://github.com/microting/eform-service-items-planning-plugin/issues/196)
+- Bump Microting.eForm from 5.2.5 to 5.2.7 [\#195](https://github.com/microting/eform-service-items-planning-plugin/issues/195)
+
 ## [v2.0.73](https://github.com/microting/eform-service-items-planning-plugin/tree/v2.0.73) (2021-05-31)
 
 [Full Changelog](https://github.com/microting/eform-service-items-planning-plugin/compare/v2.0.72...v2.0.73)
@@ -82,7 +92,6 @@
 **Merged pull requests:**
 
 - Upgrade to GitHub-native Dependabot [\#145](https://github.com/microting/eform-service-items-planning-plugin/pull/145) ([dependabot-preview[bot]](https://github.com/apps/dependabot-preview))
-- Bump Pomelo.EntityFrameworkCore.MySql from 3.2.5 to 5.0.0 [\#144](https://github.com/microting/eform-service-items-planning-plugin/pull/144) ([dependabot-preview[bot]](https://github.com/apps/dependabot-preview))
 - Bump NUnit from 3.13.1 to 3.13.2 [\#143](https://github.com/microting/eform-service-items-planning-plugin/pull/143) ([dependabot-preview[bot]](https://github.com/apps/dependabot-preview))
 - Bump Microsoft.EntityFrameworkCore.Proxies from 3.1.8 to 5.0.5 [\#90](https://github.com/microting/eform-service-items-planning-plugin/pull/90) ([dependabot-preview[bot]](https://github.com/apps/dependabot-preview))
 - Bump Microsoft.NET.Test.Sdk from 16.9.1 to 16.9.4 [\#82](https://github.com/microting/eform-service-items-planning-plugin/pull/82) ([dependabot-preview[bot]](https://github.com/apps/dependabot-preview))
@@ -301,6 +310,7 @@
 
 **Merged pull requests:**
 
+- Bump Pomelo.EntityFrameworkCore.MySql from 3.2.5 to 5.0.0 [\#144](https://github.com/microting/eform-service-items-planning-plugin/pull/144) ([dependabot-preview[bot]](https://github.com/apps/dependabot-preview))
 -  Merge Planning and Item into Planning [\#48](https://github.com/microting/eform-service-items-planning-plugin/pull/48) ([sanioooook](https://github.com/sanioooook))
 
 ## [v2.0.42](https://github.com/microting/eform-service-items-planning-plugin/tree/v2.0.42) (2021-02-18)
