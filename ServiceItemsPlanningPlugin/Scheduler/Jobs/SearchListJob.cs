@@ -130,7 +130,7 @@ namespace ServiceItemsPlanningPlugin.Scheduler.Jobs
 
             foreach (Planning planning in pushReadyPlannings)
             {
-                if ((((DateTime) planning.NextExecutionTime).Date - now.Date).Days == 5)
+                if ((((DateTime) planning.NextExecutionTime).Date - now.Date).Days == planning.DaysBeforeRedeploymentPushMessage)
                 {
                     await _bus.SendLocal(new PushMessage(planning.Id));
                 }
