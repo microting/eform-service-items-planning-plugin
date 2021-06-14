@@ -1,5 +1,13 @@
 # Changelog
 
+## [v2.0.80](https://github.com/microting/eform-service-items-planning-plugin/tree/v2.0.80) (2021-06-14)
+
+[Full Changelog](https://github.com/microting/eform-service-items-planning-plugin/compare/v2.0.79...v2.0.80)
+
+**Implemented enhancements:**
+
+- Bump Microting.ItemsPlanningBase from 3.0.21 to 3.0.22 [\#213](https://github.com/microting/eform-service-items-planning-plugin/issues/213)
+
 ## [v2.0.79](https://github.com/microting/eform-service-items-planning-plugin/tree/v2.0.79) (2021-06-11)
 
 [Full Changelog](https://github.com/microting/eform-service-items-planning-plugin/compare/v2.0.78...v2.0.79)
@@ -447,6 +455,7 @@
 
 - Minor fixes [\#28](https://github.com/microting/eform-service-items-planning-plugin/pull/28) ([Gid733](https://github.com/Gid733))
 - Bump NUnit from 3.12.0 to 3.13.0 [\#13](https://github.com/microting/eform-service-items-planning-plugin/pull/13) ([dependabot-preview[bot]](https://github.com/apps/dependabot-preview))
+- Bump Microting.eFormApi.BasePn from 2.0.65 to 2.0.67 [\#6](https://github.com/microting/eform-service-items-planning-plugin/pull/6) ([dependabot-preview[bot]](https://github.com/apps/dependabot-preview))
 
 ## [v2.0.22](https://github.com/microting/eform-service-items-planning-plugin/tree/v2.0.22) (2021-01-14)
 
@@ -462,7 +471,6 @@
 - Bump Microting.ItemsPlanningBase from 2.0.68 to 2.0.75 [\#11](https://github.com/microting/eform-service-items-planning-plugin/pull/11) ([dependabot-preview[bot]](https://github.com/apps/dependabot-preview))
 - Bump Microting.eForm from 4.1.14 to 4.1.17 [\#10](https://github.com/microting/eform-service-items-planning-plugin/pull/10) ([dependabot-preview[bot]](https://github.com/apps/dependabot-preview))
 - Bump Microsoft.NET.Test.Sdk from 16.7.1 to 16.8.3 [\#8](https://github.com/microting/eform-service-items-planning-plugin/pull/8) ([dependabot-preview[bot]](https://github.com/apps/dependabot-preview))
-- Bump Microting.eFormApi.BasePn from 2.0.65 to 2.0.67 [\#6](https://github.com/microting/eform-service-items-planning-plugin/pull/6) ([dependabot-preview[bot]](https://github.com/apps/dependabot-preview))
 
 ## [v2.0.20](https://github.com/microting/eform-service-items-planning-plugin/tree/v2.0.20) (2021-01-07)
 
