@@ -101,10 +101,10 @@ namespace ServiceItemsPlanningPlugin.Handlers
                     }
                 }
 
-
-
                 var planningCases = await _dbContext.PlanningCases
-                    .Where(x => x.PlanningId == planning.Id && x.WorkflowState != Constants.WorkflowStates.Retracted)
+                    .Where(x => x.PlanningId == planning.Id 
+                                && x.WorkflowState != Constants.WorkflowStates.Retracted
+                                && x.WorkflowState != Constants.WorkflowStates.Removed)
                     .ToListAsync();
                 foreach (PlanningCase cPlanningCase in planningCases)
                 {
