@@ -27,7 +27,9 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Microting.eForm.Infrastructure;
+using Microting.eForm.Infrastructure.Constants;
 using Microting.eForm.Infrastructure.Data.Entities;
+using Microting.eFormApi.BasePn.Infrastructure.Helpers;
 using Microting.ItemsPlanningBase.Infrastructure.Data;
 using Microting.ItemsPlanningBase.Infrastructure.Data.Entities;
 using Rebus.Handlers;
@@ -54,7 +56,7 @@ namespace ServiceItemsPlanningPlugin.Handlers
             {
                 await using MicrotingDbContext microtingDbContext = _sdkCore.DbContextHelper.GetDbContext();
                 List<PlanningSite> planningSites =
-                await _dbContext.PlanningSites.Where(x => x.PlanningId == message.PlanningId).ToListAsync();
+                await _dbContext.PlanningSites.Where(x => x.PlanningId == message.PlanningId && x.WorkflowState != Constants.WorkflowStates.Removed).ToListAsync();
 
                 foreach (PlanningSite planningSite in planningSites)
                 {
@@ -88,6 +90,7 @@ namespace ServiceItemsPlanningPlugin.Handlers
                                 body = folder.Name;
                             }
                         }
+                        Log.LogEvent($"[DBG] ItemsPlanningService PushMessageHandler.Handle : Sending push message body: {body}, title : {planningNameTranslation.Name} to site.id : {site.Id}");
                         await _sdkCore.SendPushMessage(site.Id, planningNameTranslation.Name, body);
                     }
                 }
