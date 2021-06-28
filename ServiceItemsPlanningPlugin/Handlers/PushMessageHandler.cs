@@ -90,8 +90,17 @@ namespace ServiceItemsPlanningPlugin.Handlers
                                 body = folder.Name;
                             }
                         }
+
+                        PlanningCaseSite planningCaseSite = await _dbContext.PlanningCaseSites.SingleOrDefaultAsync(x =>
+                            x.PlanningId == planningSite.PlanningId
+                            && x.MicrotingSdkSiteId == planningSite.SiteId
+                            && x.Status != 100
+                            && x.WorkflowState == Constants.WorkflowStates.Created);
                         Log.LogEvent($"[DBG] ItemsPlanningService PushMessageHandler.Handle : Sending push message body: {body}, title : {planningNameTranslation.Name} to site.id : {site.Id}");
-                        await _sdkCore.SendPushMessage(site.Id, planningNameTranslation.Name, body);
+                        Case @case =
+                            await microtingDbContext.Cases.SingleOrDefaultAsync(x =>
+                                x.Id == planningCaseSite.MicrotingSdkCaseId);
+                        await _sdkCore.SendPushMessage(site.Id, planningNameTranslation.Name, body, (int)@case.MicrotingUid);
                     }
                 }
 
