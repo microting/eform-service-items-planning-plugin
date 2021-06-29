@@ -22,6 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -67,28 +68,16 @@ namespace ServiceItemsPlanningPlugin.Handlers
                             await _dbContext.PlanningNameTranslation.SingleOrDefaultAsync(x =>
                                 x.PlanningId == planning.Id
                                 && x.LanguageId == site.LanguageId);
-                        
-                        var folder = microtingDbContext.Folders
-                            .Include(x => x.Parent)
-                            .Select(x => new
-                            {
-                                x.Name,
-                                x.Parent,
-                                x.Id,
-                            })
-                            .FirstOrDefault(y => y.Id == planning.SdkFolderId);
+
+                        var folder = await getTopFolderName((int)planning.SdkFolderId, microtingDbContext);
                         string body = "";
                         if (folder != null)
                         {
-                            planning.SdkFolderId = folder.Id;
-                            if (folder.Parent != null)
-                            {
-                                body = folder.Parent.Name + " - " + folder.Name;
-                            }
-                            else
-                            {
-                                body = folder.Name;
-                            }
+                            planning.SdkFolderId = microtingDbContext.Folders.FirstOrDefault(y => y.Id == planning.SdkFolderId).Id;
+                            FolderTranslation folderTranslation =
+                                await microtingDbContext.FolderTranslations.SingleOrDefaultAsync(x =>
+                                    x.FolderId == folder.Id && x.LanguageId == site.LanguageId);
+                            body = $"{folderTranslation.Name} ({site.Name};{DateTime.Now:d, M yyyy})";
                         }
 
                         PlanningCaseSite planningCaseSite = await _dbContext.PlanningCaseSites.SingleOrDefaultAsync(x =>
@@ -107,6 +96,16 @@ namespace ServiceItemsPlanningPlugin.Handlers
                 planning.PushMessageSent = true;
                 await planning.Update(_dbContext);
             }
+        }
+
+        private async Task<Folder> getTopFolderName(int folderId, MicrotingDbContext dbContext)
+        {
+            var result = await dbContext.Folders.FirstOrDefaultAsync(y => y.Id == folderId);
+            if (result.ParentId != null)
+            {
+                result = await getTopFolderName((int)result.ParentId, dbContext);
+            }
+            return result;
         }
     }
 }
