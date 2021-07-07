@@ -121,7 +121,7 @@ namespace ServiceItemsPlanningPlugin
                 var dbNameSection = Regex.Match(sdkConnectionString, @"(Database=\w*;)").Groups[0].Value;
                 var dbPrefix = Regex.Match(sdkConnectionString, @"Database=(\d*)_").Groups[1].Value;
 
-                var pluginDbName = $"Initial Catalog={dbPrefix}_eform-angular-items-planning-plugin;";
+                var pluginDbName = $"Database={dbPrefix}_eform-angular-items-planning-plugin;";
                 var connectionString = sdkConnectionString.Replace(dbNameSection, pluginDbName);
                 string rabbitmqHost = connectionString.Contains("frontend") ? $"frontend-{dbPrefix}-rabbitmq" :"localhost";
 
