@@ -102,7 +102,7 @@ namespace ServiceItemsPlanningPlugin.Handlers
                 }
 
                 var planningCases = await _dbContext.PlanningCases
-                    .Where(x => x.PlanningId == planning.Id 
+                    .Where(x => x.PlanningId == planning.Id
                                 && x.WorkflowState != Constants.WorkflowStates.Retracted
                                 && x.WorkflowState != Constants.WorkflowStates.Removed)
                     .ToListAsync();
@@ -191,7 +191,30 @@ namespace ServiceItemsPlanningPlugin.Handlers
                     }
 
                     if (planningCaseSite.MicrotingSdkCaseId >= 1) continue;
+                    if (planning.PushMessageOnDeployment)
+                    {
+                        var folder = await getTopFolderName((int) planning.SdkFolderId, microtingDbContext);
+                        string body = "";
+                        if (folder != null)
+                        {
+                            planning.SdkFolderId = microtingDbContext.Folders
+                                .FirstOrDefault(y => y.Id == planning.SdkFolderId).Id;
+                            FolderTranslation folderTranslation =
+                                await microtingDbContext.FolderTranslations.SingleOrDefaultAsync(x =>
+                                    x.FolderId == folder.Id && x.LanguageId == sdkSite.LanguageId);
+                            body = $"{folderTranslation.Name} ({sdkSite.Name};{DateTime.Now:d, M yyyy})";
+                        }
+
+                        PlanningNameTranslation planningNameTranslation =
+                            await _dbContext.PlanningNameTranslation.SingleOrDefaultAsync(x =>
+                                x.PlanningId == planning.Id
+                                && x.LanguageId == sdkSite.LanguageId);
+
+                        mainElement.PushMessageBody = body;
+                        mainElement.PushMessageTitle = planningNameTranslation.Name;
+                    }
                     var caseId = await _sdkCore.CaseCreate(mainElement, "", (int)sdkSite.MicrotingUid, null);
+
                     if (caseId != null)
                     {
                         var caseDto = await _sdkCore.CaseLookupMUId((int) caseId);
@@ -200,6 +223,16 @@ namespace ServiceItemsPlanningPlugin.Handlers
                     }
                 }
             }
+        }
+
+        private async Task<Folder> getTopFolderName(int folderId, MicrotingDbContext dbContext)
+        {
+            var result = await dbContext.Folders.FirstOrDefaultAsync(y => y.Id == folderId);
+            if (result.ParentId != null)
+            {
+                result = await getTopFolderName((int)result.ParentId, dbContext);
+            }
+            return result;
         }
     }
 }
