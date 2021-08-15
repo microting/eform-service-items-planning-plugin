@@ -64,42 +64,42 @@ namespace ServiceItemsPlanningPlugin.Handlers
                     .Select(x => x.SiteId)
                     .ToList();
 
-                var removedSiteIds = _dbContext.PlanningSites
-                    .Where(x => x.WorkflowState == Constants.WorkflowStates.Removed
-                                && x.PlanningId == planning.Id)
-                    .Select(x => x.SiteId)
-                    .ToList();
-
-                foreach (var siteId in removedSiteIds)
-                {
-                    Log.LogEvent($"ItemCaseCreateHandler.Task: Found {removedSiteIds.Count} sites, which has been removed, so checking for PlanningCaseSites which has not yet been retracted.");
-                    var casesToDelete = await _dbContext.PlanningCaseSites.Where(x =>
-                        x.PlanningId == planning.Id && x.MicrotingSdkSiteId == siteId &&
-                        x.WorkflowState != Constants.WorkflowStates.Retracted).ToListAsync();
-
-                    Log.LogEvent($"ItemCaseCreateHandler.Task: Found {casesToDelete.Count} PlanningCaseSites, which has not yet been retracted, so retracting now.");
-                    foreach (var caseToDelete in casesToDelete)
-                    {
-                        try
-                        {
-                            Log.LogEvent(
-                                $"ItemCaseCreateHandler.Task: Trying to retract the case with Id: {caseToDelete.Id}");
-                            if (caseToDelete.MicrotingSdkCaseId != 0)
-                            {
-                                var caseDto = await _sdkCore.CaseLookupCaseId(caseToDelete.MicrotingSdkCaseId);
-                                if (caseDto.MicrotingUId != null) await _sdkCore.CaseDelete((int) caseDto.MicrotingUId);
-                            }
-
-                            caseToDelete.WorkflowState = Constants.WorkflowStates.Retracted;
-                            await caseToDelete.Update(_dbContext);
-                        }
-                        catch (Exception ex)
-                        {
-                            Console.WriteLine(ex.Message);
-                        }
-
-                    }
-                }
+                // var removedSiteIds = _dbContext.PlanningSites
+                //     .Where(x => x.WorkflowState == Constants.WorkflowStates.Removed
+                //                 && x.PlanningId == planning.Id)
+                //     .Select(x => x.SiteId)
+                //     .ToList();
+                //
+                // foreach (var siteId in removedSiteIds)
+                // {
+                //     Log.LogEvent($"ItemCaseCreateHandler.Task: Found {removedSiteIds.Count} sites, which has been removed, so checking for PlanningCaseSites which has not yet been retracted.");
+                //     var casesToDelete = await _dbContext.PlanningCaseSites.Where(x =>
+                //         x.PlanningId == planning.Id && x.MicrotingSdkSiteId == siteId &&
+                //         x.WorkflowState != Constants.WorkflowStates.Retracted).ToListAsync();
+                //
+                //     Log.LogEvent($"ItemCaseCreateHandler.Task: Found {casesToDelete.Count} PlanningCaseSites, which has not yet been retracted, so retracting now.");
+                //     foreach (var caseToDelete in casesToDelete)
+                //     {
+                //         try
+                //         {
+                //             Log.LogEvent(
+                //                 $"ItemCaseCreateHandler.Task: Trying to retract the case with Id: {caseToDelete.Id}");
+                //             if (caseToDelete.MicrotingSdkCaseId != 0)
+                //             {
+                //                 var caseDto = await _sdkCore.CaseLookupCaseId(caseToDelete.MicrotingSdkCaseId);
+                //                 if (caseDto.MicrotingUId != null) await _sdkCore.CaseDelete((int) caseDto.MicrotingUId);
+                //             }
+                //
+                //             caseToDelete.WorkflowState = Constants.WorkflowStates.Retracted;
+                //             await caseToDelete.Update(_dbContext);
+                //         }
+                //         catch (Exception ex)
+                //         {
+                //             Console.WriteLine(ex.Message);
+                //         }
+                //
+                //     }
+                // }
 
                 var planningCases = await _dbContext.PlanningCases
                     .Where(x => x.PlanningId == planning.Id
@@ -159,7 +159,11 @@ namespace ServiceItemsPlanningPlugin.Handlers
                     {
                         mainElement.Label += string.IsNullOrEmpty(mainElement.Label) ? $"{planning.Type}" : $" - {planning.Type}";
                     }
-                    mainElement.ElementList[0].Label = mainElement.Label;
+
+                    if (mainElement.ElementList.Count == 1)
+                    {
+                        mainElement.ElementList[0].Label = mainElement.Label;
+                    }
                     mainElement.CheckListFolderName = folderId;
                     mainElement.StartDate = DateTime.Now.ToUniversalTime();
                     mainElement.EndDate = DateTime.Now.AddYears(10).ToUniversalTime();
