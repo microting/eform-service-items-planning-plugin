@@ -27,6 +27,7 @@ using Castle.MicroKernel.Registration;
 using Castle.MicroKernel.SubSystems.Configuration;
 using Castle.Windsor;
 using Rebus.Config;
+using Rebus.Logging;
 
 namespace ServiceItemsPlanningPlugin.Installers
 {
@@ -56,7 +57,7 @@ namespace ServiceItemsPlanningPlugin.Installers
         public void Install(IWindsorContainer container, IConfigurationStore store)
         {
             Configure.With(new CastleWindsorContainerAdapter(container))
-                .Logging(l => l.ColoredConsole())
+                .Logging(l => l.ColoredConsole(LogLevel.Info))
                 .Transport(t => t.UseRabbitMq($"amqp://{_rabbitMqUser}:{_rabbitMqPassword}@{_rabbitMqHost}", "eform-service-items-planning-plugin"))
                 .Options(o =>
                 {
