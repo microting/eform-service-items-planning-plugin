@@ -54,14 +54,24 @@ namespace ServiceItemsPlanningPlugin.Handlers
 
         public async Task Handle(eFormCompleted message)
         {
+            await using MicrotingDbContext sdkDbContext = _sdkCore.DbContextHelper.GetDbContext();
             var planningCaseSite =
                 await _dbContext.PlanningCaseSites.SingleOrDefaultAsync(x => x.MicrotingSdkCaseId == message.caseId);
+            CaseDto caseDto = await _sdkCore.CaseReadByCaseId(message.caseId);
+
+            if (planningCaseSite == null)
+            {
+                var site = await sdkDbContext.Sites.SingleOrDefaultAsync(x => x.MicrotingUid == caseDto.SiteUId);
+                var checkListSite = await sdkDbContext.CheckListSites.SingleOrDefaultAsync(x =>
+                    x.CheckListId == caseDto.CheckListId && x.SiteId == site.Id);
+                planningCaseSite =
+                    await _dbContext.PlanningCaseSites.SingleOrDefaultAsync(x =>
+                        x.MicrotingCheckListSitId == checkListSite.MicrotingUid);
+            }
             Planning planning =
                 await _dbContext.Plannings.SingleOrDefaultAsync(x => x.Id == planningCaseSite.PlanningId);
-            await using MicrotingDbContext sdkDbContext = _sdkCore.DbContextHelper.GetDbContext();
             if (planningCaseSite != null)
             {
-                CaseDto caseDto = await _sdkCore.CaseReadByCaseId(message.caseId);
                 var microtingUId = caseDto.MicrotingUId;
                 var microtingCheckUId = caseDto.CheckUId;
                 Site site = await sdkDbContext.Sites.SingleAsync(x => x.Id == planningCaseSite.MicrotingSdkSiteId);
