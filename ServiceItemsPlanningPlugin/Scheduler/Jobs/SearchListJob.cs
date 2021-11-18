@@ -73,13 +73,13 @@ namespace ServiceItemsPlanningPlugin.Scheduler.Jobs
 
         private async Task ExecutePush()
         {
-            if (DateTime.UtcNow.Hour < 6)
+            if (DateTime.UtcNow.Hour < 7)
             {
                 Log.LogEvent($"SearchListJob.Task: The current hour is smaller than the start time of 7, so ending processing");
                 return;
             }
 
-            if (DateTime.UtcNow.Hour > 8)
+            if (DateTime.UtcNow.Hour > 9)
             {
                 Log.LogEvent($"SearchListJob.Task: The current hour is bigger than the end time of 9, so ending processing");
                 return;
