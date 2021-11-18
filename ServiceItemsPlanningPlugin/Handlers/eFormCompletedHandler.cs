@@ -26,6 +26,7 @@ using Microting.eForm.Dto;
 using Microting.eForm.Infrastructure;
 using Microting.eForm.Infrastructure.Data.Entities;
 using Microting.eForm.Infrastructure.Models;
+using Microting.ItemsPlanningBase.Infrastructure.Enums;
 
 namespace ServiceItemsPlanningPlugin.Handlers
 {
@@ -53,7 +54,10 @@ namespace ServiceItemsPlanningPlugin.Handlers
 
         public async Task Handle(eFormCompleted message)
         {
-            var planningCaseSite = await _dbContext.PlanningCaseSites.SingleOrDefaultAsync(x => x.MicrotingSdkCaseId == message.caseId);
+            var planningCaseSite =
+                await _dbContext.PlanningCaseSites.SingleOrDefaultAsync(x => x.MicrotingSdkCaseId == message.caseId);
+            Planning planning =
+                await _dbContext.Plannings.SingleOrDefaultAsync(x => x.Id == planningCaseSite.PlanningId);
             await using MicrotingDbContext sdkDbContext = _sdkCore.DbContextHelper.GetDbContext();
             if (planningCaseSite != null)
             {
@@ -64,38 +68,77 @@ namespace ServiceItemsPlanningPlugin.Handlers
                 Language language = await sdkDbContext.Languages.SingleAsync(x => x.Id == site.LanguageId);
                 if (microtingUId != null && microtingCheckUId != null)
                 {
-                    ReplyElement theCase = await _sdkCore.CaseRead((int)microtingUId, (int)microtingCheckUId, language);
+                    ReplyElement theCase =
+                        await _sdkCore.CaseRead((int)microtingUId, (int)microtingCheckUId, language);
 
-                    planningCaseSite.Status = 100;
-                    planningCaseSite = await SetFieldValue(planningCaseSite, theCase.Id, language);
-
-                    planningCaseSite.MicrotingSdkCaseDoneAt = theCase.DoneAt;
-                    planningCaseSite.DoneByUserId = theCase.DoneById;
-                    var worker = await sdkDbContext.Workers.SingleAsync(x => x.Id == planningCaseSite.DoneByUserId);
-                    planningCaseSite.DoneByUserName = $"{worker.FirstName} {worker.LastName}";
-                    await planningCaseSite.Update(_dbContext);
-
-                    var planningCase = await _dbContext.PlanningCases.SingleOrDefaultAsync(x => x.Id == planningCaseSite.PlanningCaseId);
-                    if (planningCase.Status != 100)
+                    if (planning.RepeatType == RepeatType.Day && planning.RepeatEvery != 0)
                     {
-                        planningCase.Status = 100;
-                        planningCase.MicrotingSdkCaseDoneAt = theCase.DoneAt;
-                        planningCase.MicrotingSdkCaseId = planningCaseSite.MicrotingSdkCaseId;
-                        planningCase.DoneByUserId = theCase.DoneById;
-                        planningCase.DoneByUserName = planningCaseSite.DoneByUserName;
-                        planningCase.WorkflowState = Constants.WorkflowStates.Processed;
-                        // planningCase.DoneByUserName = $"{site.Result.FirstName} {site.Result.LastName}";
+                        planningCaseSite.Status = 100;
+                        planningCaseSite = await SetFieldValue(planningCaseSite, theCase.Id, language);
 
-                        planningCase = await SetFieldValue(planningCase, theCase.Id, language);
-                        await planningCase.Update(_dbContext);
+                        planningCaseSite.MicrotingSdkCaseDoneAt = theCase.DoneAt;
+                        planningCaseSite.DoneByUserId = theCase.DoneById;
+                        var worker = await sdkDbContext.Workers.SingleAsync(x => x.Id == planningCaseSite.DoneByUserId);
+                        planningCaseSite.DoneByUserName = $"{worker.FirstName} {worker.LastName}";
+                        await planningCaseSite.Update(_dbContext);
+
+                        var planningCase =
+                            await _dbContext.PlanningCases.SingleOrDefaultAsync(x =>
+                                x.Id == planningCaseSite.PlanningCaseId);
+                        if (planningCase.Status != 100)
+                        {
+                            planningCase.Status = 100;
+                            planningCase.MicrotingSdkCaseDoneAt = theCase.DoneAt;
+                            planningCase.MicrotingSdkCaseId = planningCaseSite.MicrotingSdkCaseId;
+                            planningCase.DoneByUserId = theCase.DoneById;
+                            planningCase.DoneByUserName = planningCaseSite.DoneByUserName;
+                            planningCase.WorkflowState = Constants.WorkflowStates.Processed;
+                            // planningCase.DoneByUserName = $"{site.Result.FirstName} {site.Result.LastName}";
+
+                            planningCase = await SetFieldValue(planningCase, theCase.Id, language);
+                            await planningCase.Update(_dbContext);
+                        }
+
+                        planning.DoneInPeriod = true;
+                        await planning.Update(_dbContext);
+
+                        await RetractFromMicroting(planningCase.Id);
                     }
+                    else
+                    {
+                        var planningCase =
+                            await _dbContext.PlanningCases.SingleOrDefaultAsync(x =>
+                                x.Id == planningCaseSite.PlanningCaseId);
+                        if (planningCase != null && planningCase.Status != 100)
+                        {
+                            planningCase.Status = 100;
+                            planningCase.MicrotingSdkCaseDoneAt = theCase.DoneAt;
+                            planningCase.MicrotingSdkCaseId = theCase.Id;
+                            planningCase.DoneByUserId = theCase.DoneById;
+                            planningCase.DoneByUserName = planningCaseSite.DoneByUserName;
+                            planningCase.WorkflowState = Constants.WorkflowStates.Processed;
+                            // planningCase.DoneByUserName = $"{site.Result.FirstName} {site.Result.LastName}";
 
-                    Planning planning =
-                        await _dbContext.Plannings.SingleOrDefaultAsync(x => x.Id == planningCase.PlanningId);
-                    planning.DoneInPeriod = true;
-                    await planning.Update(_dbContext);
-
-                    await RetractFromMicroting(planningCase.Id);
+                            planningCase = await SetFieldValue(planningCase, theCase.Id, language);
+                            await planningCase.Update(_dbContext);
+                        }
+                        else
+                        {
+                            planningCase = new PlanningCase
+                            {
+                                Status = 100,
+                                MicrotingSdkCaseDoneAt = theCase.DoneAt,
+                                MicrotingSdkCaseId = theCase.Id,
+                                DoneByUserId = theCase.DoneById,
+                                DoneByUserName = planningCaseSite.DoneByUserName,
+                                WorkflowState = Constants.WorkflowStates.Processed,
+                                PlanningId = planning.Id
+                            };
+                            await planning.Create(_dbContext);
+                            planningCase = await SetFieldValue(planningCase, theCase.Id, language);
+                            await planningCase.Update(_dbContext);
+                        }
+                    }
                 }
             }
         }
@@ -108,13 +151,14 @@ namespace ServiceItemsPlanningPlugin.Handlers
             foreach (var caseSite in planningCaseSites)
             {
                 var caseDto = await _sdkCore.CaseReadByCaseId(caseSite.MicrotingSdkCaseId);
-                if (caseDto.MicrotingUId != null) await _sdkCore.CaseDelete((int) caseDto.MicrotingUId);
+                if (caseDto.MicrotingUId != null) await _sdkCore.CaseDelete((int)caseDto.MicrotingUId);
                 caseSite.WorkflowState = Constants.WorkflowStates.Retracted;
                 await caseSite.Update(_dbContext);
             }
         }
 
-        private async Task<PlanningCaseSite> SetFieldValue(PlanningCaseSite planningCaseSite, int caseId, Language language)
+        private async Task<PlanningCaseSite> SetFieldValue(PlanningCaseSite planningCaseSite, int caseId,
+            Language language)
         {
             var planning = _dbContext.Plannings.SingleOrDefault(x => x.Id == planningCaseSite.PlanningId);
             var caseIds = new List<int>
@@ -146,7 +190,7 @@ namespace ServiceItemsPlanningPlugin.Handlers
         private async Task<PlanningCase> SetFieldValue(PlanningCase planningCase, int caseId, Language language)
         {
             var planning = _dbContext.Plannings.SingleOrDefault(x => x.Id == planningCase.PlanningId);
-            var caseIds = new List<int> {planningCase.MicrotingSdkCaseId};
+            var caseIds = new List<int> { planningCase.MicrotingSdkCaseId };
             var fieldValues = await _sdkCore.Advanced_FieldValueReadList(caseIds, language);
 
             if (planning == null) return planningCase;
