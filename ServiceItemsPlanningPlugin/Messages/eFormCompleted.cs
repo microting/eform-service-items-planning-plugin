@@ -25,11 +25,15 @@ namespace ServiceItemsPlanningPlugin.Messages
 {
     public class eFormCompleted
     {
-        public int caseId { get; protected set; }
+        public int? caseId { get; protected set; }
+        public int? MicrotingUId { get; protected set; }
+        public int? CheckId { get; protected set; }
 
-        public eFormCompleted(int caseId)
+        public eFormCompleted(int? caseId, int? MicrotingUId, int? checkId)
         {
             this.caseId = caseId;
+            this.MicrotingUId = MicrotingUId;
+            this.CheckId = checkId;
         }
     }
 }

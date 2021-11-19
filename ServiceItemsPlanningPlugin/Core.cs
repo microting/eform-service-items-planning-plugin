@@ -96,10 +96,9 @@ namespace ServiceItemsPlanningPlugin
         {
             CaseDto trigger = (CaseDto)sender;
 
-            if (trigger.CaseId != null)
+            if (trigger.MicrotingUId != null)
             {
-                int caseId = (int)trigger.CaseId;
-                _bus.SendLocal(new eFormCompleted(caseId));
+                _bus.SendLocal(new eFormCompleted(trigger.CaseId, trigger.MicrotingUId, trigger.CheckUId));
             }
         }
 

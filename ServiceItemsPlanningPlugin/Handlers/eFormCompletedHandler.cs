@@ -57,29 +57,27 @@ namespace ServiceItemsPlanningPlugin.Handlers
             await using MicrotingDbContext sdkDbContext = _sdkCore.DbContextHelper.GetDbContext();
             var planningCaseSite =
                 await _dbContext.PlanningCaseSites.SingleOrDefaultAsync(x => x.MicrotingSdkCaseId == message.caseId);
-            CaseDto caseDto = await _sdkCore.CaseReadByCaseId(message.caseId);
+            var dbCase = await sdkDbContext.Cases.SingleOrDefaultAsync(x => x.Id == message.caseId) ?? await sdkDbContext.Cases.SingleOrDefaultAsync(x => x.MicrotingCheckUid == message.CheckId);
 
             if (planningCaseSite == null)
             {
-                var site = await sdkDbContext.Sites.SingleOrDefaultAsync(x => x.MicrotingUid == caseDto.SiteUId);
+                // var site = await sdkDbContext.Sites.SingleOrDefaultAsync(x => x.MicrotingUid == caseDto.SiteUId);
                 var checkListSite = await sdkDbContext.CheckListSites.SingleOrDefaultAsync(x =>
-                    x.CheckListId == caseDto.CheckListId && x.SiteId == site.Id);
+                    x.MicrotingUid == message.MicrotingUId);
                 planningCaseSite =
                     await _dbContext.PlanningCaseSites.SingleOrDefaultAsync(x =>
-                        x.MicrotingCheckListSitId == checkListSite.MicrotingUid);
+                        x.MicrotingCheckListSitId == checkListSite.Id);
             }
             Planning planning =
                 await _dbContext.Plannings.SingleOrDefaultAsync(x => x.Id == planningCaseSite.PlanningId);
             if (planningCaseSite != null)
             {
-                var microtingUId = caseDto.MicrotingUId;
-                var microtingCheckUId = caseDto.CheckUId;
                 Site site = await sdkDbContext.Sites.SingleAsync(x => x.Id == planningCaseSite.MicrotingSdkSiteId);
                 Language language = await sdkDbContext.Languages.SingleAsync(x => x.Id == site.LanguageId);
-                if (microtingUId != null && microtingCheckUId != null)
+                if (dbCase.MicrotingUid != null && dbCase.MicrotingCheckUid != null)
                 {
                     ReplyElement theCase =
-                        await _sdkCore.CaseRead((int)microtingUId, (int)microtingCheckUId, language);
+                        await _sdkCore.CaseRead((int)dbCase.MicrotingUid, (int)dbCase.MicrotingCheckUid, language);
 
                     if (planning.RepeatType == RepeatType.Day && planning.RepeatEvery != 0)
                     {
