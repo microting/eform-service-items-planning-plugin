@@ -72,7 +72,7 @@ namespace ServiceItemsPlanningPlugin.Handlers
                 await _dbContext.Plannings.SingleOrDefaultAsync(x => x.Id == planningCaseSite.PlanningId);
             if (planningCaseSite != null)
             {
-                Site site = await sdkDbContext.Sites.SingleAsync(x => x.Id == planningCaseSite.MicrotingSdkSiteId);
+                Site site = await sdkDbContext.Sites.SingleAsync(x => x.Id == dbCase.SiteId);
                 Language language = await sdkDbContext.Languages.SingleAsync(x => x.Id == site.LanguageId);
                 if (dbCase.MicrotingUid != null && dbCase.MicrotingCheckUid != null)
                 {
@@ -97,9 +97,9 @@ namespace ServiceItemsPlanningPlugin.Handlers
                         {
                             planningCase.Status = 100;
                             planningCase.MicrotingSdkCaseDoneAt = theCase.DoneAt;
-                            planningCase.MicrotingSdkCaseId = planningCaseSite.MicrotingSdkCaseId;
+                            planningCase.MicrotingSdkCaseId = dbCase.Id;
                             planningCase.DoneByUserId = theCase.DoneById;
-                            planningCase.DoneByUserName = planningCaseSite.DoneByUserName;
+                            planningCase.DoneByUserName = site.Name;
                             planningCase.WorkflowState = Constants.WorkflowStates.Processed;
                             // planningCase.DoneByUserName = $"{site.Result.FirstName} {site.Result.LastName}";
 
@@ -121,9 +121,9 @@ namespace ServiceItemsPlanningPlugin.Handlers
                         {
                             planningCase.Status = 100;
                             planningCase.MicrotingSdkCaseDoneAt = theCase.DoneAt;
-                            planningCase.MicrotingSdkCaseId = theCase.Id;
+                            planningCase.MicrotingSdkCaseId = dbCase.Id;
                             planningCase.DoneByUserId = theCase.DoneById;
-                            planningCase.DoneByUserName = planningCaseSite.DoneByUserName;
+                            planningCase.DoneByUserName = site.Name;
                             planningCase.WorkflowState = Constants.WorkflowStates.Processed;
                             // planningCase.DoneByUserName = $"{site.Result.FirstName} {site.Result.LastName}";
 
@@ -136,9 +136,9 @@ namespace ServiceItemsPlanningPlugin.Handlers
                             {
                                 Status = 100,
                                 MicrotingSdkCaseDoneAt = theCase.DoneAt,
-                                MicrotingSdkCaseId = theCase.Id,
+                                MicrotingSdkCaseId = dbCase.Id,
                                 DoneByUserId = theCase.DoneById,
-                                DoneByUserName = planningCaseSite.DoneByUserName,
+                                DoneByUserName = site.Name,
                                 WorkflowState = Constants.WorkflowStates.Processed,
                                 PlanningId = planning.Id
                             };
