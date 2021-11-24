@@ -142,7 +142,7 @@ namespace ServiceItemsPlanningPlugin.Handlers
                                 WorkflowState = Constants.WorkflowStates.Processed,
                                 PlanningId = planning.Id
                             };
-                            await planning.Create(_dbContext);
+                            await planningCase.Create(_dbContext);
                             planningCase = await SetFieldValue(planningCase, theCase.Id, language);
                             await planningCase.Update(_dbContext);
                         }
