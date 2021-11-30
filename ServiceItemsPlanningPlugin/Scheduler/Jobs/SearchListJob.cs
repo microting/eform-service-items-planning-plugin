@@ -223,9 +223,16 @@ namespace ServiceItemsPlanningPlugin.Scheduler.Jobs
 
                     if (planning.RepeatType == RepeatType.Month)
                     {
-                        var startOfMonth = new DateTime(now.Year, now.Month, (int) planning.DayOfMonth, 0, 0, 0);
-                        var nextRun = startOfMonth.AddMonths(planning.RepeatEvery);
-                        planning.NextExecutionTime = nextRun;
+                        if (planning.DayOfMonth != null)
+                        {
+                            if (planning.DayOfMonth == 0)
+                            {
+                                planning.DayOfMonth = 1;
+                            }
+                            var startOfMonth = new DateTime(now.Year, now.Month, (int) planning.DayOfMonth, 0, 0, 0);
+                            var nextRun = startOfMonth.AddMonths(planning.RepeatEvery);
+                            planning.NextExecutionTime = nextRun;
+                        }
                     }
 
                     await planning.Update(_dbContext);
