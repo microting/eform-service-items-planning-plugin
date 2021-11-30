@@ -154,7 +154,8 @@ namespace ServiceItemsPlanningPlugin.Scheduler.Jobs
                 var dailyListsQuery = baseQuery
                     .Where(x => x.RepeatType == RepeatType.Day
                                 && (x.LastExecutedTime == null ||
-                                    now.AddDays(-x.RepeatEvery) >= x.LastExecutedTime));
+                                    now.AddDays(-x.RepeatEvery) >= x.LastExecutedTime)).
+                    Where(x => x.RepeatEvery > 0);
 
                 var weeklyListsQuery = baseQuery
                     .Where(x => x.RepeatType == RepeatType.Week
@@ -214,11 +215,14 @@ namespace ServiceItemsPlanningPlugin.Scheduler.Jobs
                     planning.PushMessageSent = false;
                     if (planning.RepeatType == RepeatType.Week)
                     {
-                        var startOfWeek =
-                            new DateTime(now.Year, now.Month, now.Day, 0, 0, 0).StartOfWeek(
-                                (DayOfWeek) planning.DayOfWeek);
-                        var nextRun = startOfWeek.AddDays(planning.RepeatEvery * 7);
-                        planning.NextExecutionTime = nextRun;
+                        if (planning.DayOfWeek != null)
+                        {
+                            var startOfWeek =
+                                new DateTime(now.Year, now.Month, now.Day, 0, 0, 0).StartOfWeek(
+                                    (DayOfWeek) planning.DayOfWeek);
+                            var nextRun = startOfWeek.AddDays(planning.RepeatEvery * 7);
+                            planning.NextExecutionTime = nextRun;
+                        }
                     }
 
                     if (planning.RepeatType == RepeatType.Month)
