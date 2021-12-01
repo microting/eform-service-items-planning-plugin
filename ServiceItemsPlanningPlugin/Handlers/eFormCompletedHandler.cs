@@ -68,10 +68,10 @@ namespace ServiceItemsPlanningPlugin.Handlers
                     await _dbContext.PlanningCaseSites.SingleOrDefaultAsync(x =>
                         x.MicrotingCheckListSitId == checkListSite.Id);
             }
-            Planning planning =
-                await _dbContext.Plannings.SingleOrDefaultAsync(x => x.Id == planningCaseSite.PlanningId);
             if (planningCaseSite != null)
             {
+                Planning planning =
+                await _dbContext.Plannings.SingleOrDefaultAsync(x => x.Id == planningCaseSite.PlanningId);
                 Site site = await sdkDbContext.Sites.SingleAsync(x => x.Id == dbCase.SiteId);
                 Language language = await sdkDbContext.Languages.SingleAsync(x => x.Id == site.LanguageId);
                 if (dbCase.MicrotingUid != null && dbCase.MicrotingCheckUid != null)
