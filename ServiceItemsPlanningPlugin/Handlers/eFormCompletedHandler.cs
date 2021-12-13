@@ -22,6 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+using System;
 using Microting.eForm.Dto;
 using Microting.eForm.Infrastructure;
 using Microting.eForm.Infrastructure.Data.Entities;
@@ -58,6 +59,12 @@ namespace ServiceItemsPlanningPlugin.Handlers
             var planningCaseSite =
                 await _dbContext.PlanningCaseSites.SingleOrDefaultAsync(x => x.MicrotingSdkCaseId == message.caseId);
             var dbCase = await sdkDbContext.Cases.SingleOrDefaultAsync(x => x.Id == message.caseId) ?? await sdkDbContext.Cases.SingleOrDefaultAsync(x => x.MicrotingCheckUid == message.CheckId);
+
+            if (dbCase is { DoneAt: { } })
+            {
+                Console.WriteLine($"Case {message.caseId} is not yet done, so not creating planning case");
+                return;
+            }
 
             if (planningCaseSite == null)
             {
