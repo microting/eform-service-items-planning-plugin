@@ -22,9 +22,11 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+using System.Globalization;
 using Microting.eForm.Infrastructure;
 using Microting.eForm.Infrastructure.Data.Entities;
 using Microting.eFormApi.BasePn.Infrastructure.Helpers;
+using Microting.ItemsPlanningBase.Infrastructure.Enums;
 
 namespace ServiceItemsPlanningPlugin.Handlers
 {
@@ -139,6 +141,7 @@ namespace ServiceItemsPlanningPlugin.Handlers
 
                     Site sdkSite = await microtingDbContext.Sites.SingleAsync(x => x.Id == siteId);
                     Language language = await microtingDbContext.Languages.SingleAsync(x => x.Id == sdkSite.LanguageId);
+                    CultureInfo ci = new CultureInfo(language.LanguageCode);
                     var mainElement = await _sdkCore.ReadeForm(message.RelatedEFormId, language);
                     var translation = _dbContext.PlanningNameTranslation
                         .Single(x => x.LanguageId == language.Id && x.PlanningId == planning.Id).Name;
@@ -158,6 +161,11 @@ namespace ServiceItemsPlanningPlugin.Handlers
                     if (!string.IsNullOrEmpty(planning.Type))
                     {
                         mainElement.Label += string.IsNullOrEmpty(mainElement.Label) ? $"{planning.Type}" : $" - {planning.Type}";
+                    }
+
+                    if (planning.RepeatType == RepeatType.Day && planning.RepeatEvery == 1)
+                    {
+                        mainElement.Label = $"{planning.StartDate.ToString("dddd dd. MMM yyyy", ci)} - {mainElement.Label}";
                     }
 
                     if (mainElement.ElementList.Count == 1)
