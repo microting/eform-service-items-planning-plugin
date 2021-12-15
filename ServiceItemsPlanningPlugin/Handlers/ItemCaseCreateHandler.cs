@@ -148,6 +148,7 @@ namespace ServiceItemsPlanningPlugin.Handlers
                     var folderId = microtingDbContext.Folders.Single(x => x.Id == planning.SdkFolderId).MicrotingUid.ToString();
 
                     mainElement.Label = string.IsNullOrEmpty(planning.PlanningNumber) ? "" : planning.PlanningNumber;
+                    mainElement.StartDate = DateTime.Now.ToUniversalTime();
                     if (!string.IsNullOrEmpty(translation))
                     {
                         mainElement.Label += string.IsNullOrEmpty(mainElement.Label) ? $"{translation}" : $" - {translation}";
@@ -165,7 +166,7 @@ namespace ServiceItemsPlanningPlugin.Handlers
 
                     if (planning.RepeatType == RepeatType.Day && planning.RepeatEvery == 1)
                     {
-                        mainElement.Label = $"{planning.StartDate.ToString("dddd dd. MMM yyyy", ci)} - {mainElement.Label}";
+                        mainElement.Label = $"{mainElement.StartDate.ToString("dddd dd. MMM yyyy", ci)} - {mainElement.Label}";
                     }
 
                     if (mainElement.ElementList.Count == 1)
@@ -173,7 +174,6 @@ namespace ServiceItemsPlanningPlugin.Handlers
                         mainElement.ElementList[0].Label = mainElement.Label;
                     }
                     mainElement.CheckListFolderName = folderId;
-                    mainElement.StartDate = DateTime.Now.ToUniversalTime();
                     mainElement.EndDate = DateTime.Now.AddYears(10).ToUniversalTime();
 
                     var planningCaseSite =
