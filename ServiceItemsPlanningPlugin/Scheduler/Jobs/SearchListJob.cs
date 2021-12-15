@@ -139,6 +139,7 @@ namespace ServiceItemsPlanningPlugin.Scheduler.Jobs
 
                 Log.LogEvent("SearchListJob.Task: SearchListJob.Execute got called");
                 var now = DateTime.UtcNow;
+                now = new DateTime(now.Year, now.Month, now.Day, 0, 0, 0);
                 var lastDayOfMonth = new DateTime(now.Year, now.Month, 1).AddMonths(1).AddDays(-1).Day;
                 var firstDayOfMonth = new DateTime(now.Year, now.Month, 1).Day;
 
@@ -210,7 +211,7 @@ namespace ServiceItemsPlanningPlugin.Scheduler.Jobs
 
                 foreach (var planning in scheduledItemPlannings)
                 {
-                    planning.LastExecutedTime = now;
+                    planning.LastExecutedTime = new DateTime(now.Year, now.Month, now.Day, 0, 0, 0);;
                     planning.DoneInPeriod = false;
                     planning.PushMessageSent = false;
                     if (planning.RepeatType == RepeatType.Week)
@@ -245,7 +246,7 @@ namespace ServiceItemsPlanningPlugin.Scheduler.Jobs
                         .Where(y => y.WorkflowState != Constants.WorkflowStates.Removed
                                     && y.PlanningId == planning.Id).ToList())
                     {
-                        planningSite.LastExecutedTime = now;
+                        planningSite.LastExecutedTime = new DateTime(now.Year, now.Month, now.Day, 0, 0, 0);
                         await planningSite.Update(_dbContext);
                     }
 
@@ -263,7 +264,7 @@ namespace ServiceItemsPlanningPlugin.Scheduler.Jobs
                         {
                             if (planningSite.LastExecutedTime == null)
                             {
-                                planningSite.LastExecutedTime = now;
+                                planningSite.LastExecutedTime = new DateTime(now.Year, now.Month, now.Day, 0, 0, 0);;
                                 await planningSite.Update(_dbContext);
 
                                 await _bus.SendLocal(new ScheduledItemExecuted(newPlanningSite.Id,
