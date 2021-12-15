@@ -60,11 +60,11 @@ namespace ServiceItemsPlanningPlugin.Handlers
                 await _dbContext.PlanningCaseSites.SingleOrDefaultAsync(x => x.MicrotingSdkCaseId == message.caseId);
             var dbCase = await sdkDbContext.Cases.SingleOrDefaultAsync(x => x.Id == message.caseId) ?? await sdkDbContext.Cases.SingleOrDefaultAsync(x => x.MicrotingCheckUid == message.CheckId);
 
-            if (dbCase is { DoneAt: { } })
-            {
-                Console.WriteLine($"Case {message.caseId} is not yet done, so not creating planning case");
-                return;
-            }
+            // if (dbCase is { DoneAt: { } })
+            // {
+            //     Console.WriteLine($"Case {message.caseId} is not yet done, so not creating planning case");
+            //     return;
+            // }
 
             if (planningCaseSite == null)
             {
@@ -131,6 +131,7 @@ namespace ServiceItemsPlanningPlugin.Handlers
                             planningCase.MicrotingSdkCaseId = dbCase.Id;
                             planningCase.DoneByUserId = theCase.DoneById;
                             planningCase.DoneByUserName = site.Name;
+                            planningCase.MicrotingSdkeFormId = (int)dbCase.CheckListId;
                             planningCase.WorkflowState = Constants.WorkflowStates.Processed;
                             // planningCase.DoneByUserName = $"{site.Result.FirstName} {site.Result.LastName}";
 
