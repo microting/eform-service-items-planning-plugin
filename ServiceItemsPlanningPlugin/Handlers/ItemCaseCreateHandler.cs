@@ -205,25 +205,31 @@ namespace ServiceItemsPlanningPlugin.Handlers
                     if (planningCaseSite.MicrotingSdkCaseId >= 1) continue;
                     if (planning.PushMessageOnDeployment)
                     {
-                        var folder = await getTopFolderName((int) planning.SdkFolderId, microtingDbContext);
-                        string body = "";
-                        if (folder != null)
+                        if (planning.RepeatType == RepeatType.Day && planning.RepeatEvery < 2)
+                        { }
+                        else
                         {
-                            planning.SdkFolderId = microtingDbContext.Folders
-                                .FirstOrDefault(y => y.Id == planning.SdkFolderId).Id;
-                            FolderTranslation folderTranslation =
-                                await microtingDbContext.FolderTranslations.SingleOrDefaultAsync(x =>
-                                    x.FolderId == folder.Id && x.LanguageId == sdkSite.LanguageId);
-                            body = $"{folderTranslation.Name} ({sdkSite.Name};{DateTime.Now:d, M yyyy})";
+                            var folder = await getTopFolderName((int) planning.SdkFolderId, microtingDbContext);
+                            string body = "";
+                            if (folder != null)
+                            {
+                                planning.SdkFolderId = microtingDbContext.Folders
+                                    .FirstOrDefault(y => y.Id == planning.SdkFolderId).Id;
+                                FolderTranslation folderTranslation =
+                                    await microtingDbContext.FolderTranslations.SingleOrDefaultAsync(x =>
+                                        x.FolderId == folder.Id && x.LanguageId == sdkSite.LanguageId);
+                                body = $"{folderTranslation.Name} ({sdkSite.Name};{DateTime.Now:d, M yyyy})";
+                            }
+
+                            PlanningNameTranslation planningNameTranslation =
+                                await _dbContext.PlanningNameTranslation.SingleOrDefaultAsync(x =>
+                                    x.PlanningId == planning.Id
+                                    && x.LanguageId == sdkSite.LanguageId);
+
+                            mainElement.PushMessageBody = body;
+                            mainElement.PushMessageTitle = planningNameTranslation.Name;
                         }
 
-                        PlanningNameTranslation planningNameTranslation =
-                            await _dbContext.PlanningNameTranslation.SingleOrDefaultAsync(x =>
-                                x.PlanningId == planning.Id
-                                && x.LanguageId == sdkSite.LanguageId);
-
-                        mainElement.PushMessageBody = body;
-                        mainElement.PushMessageTitle = planningNameTranslation.Name;
                     }
                     var caseId = await _sdkCore.CaseCreate(mainElement, "", (int)sdkSite.MicrotingUid, null);
 
