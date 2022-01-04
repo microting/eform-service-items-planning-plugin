@@ -211,7 +211,7 @@ namespace ServiceItemsPlanningPlugin.Scheduler.Jobs
 
                 foreach (var planning in scheduledItemPlannings)
                 {
-                    planning.LastExecutedTime = new DateTime(now.Year, now.Month, now.Day, 0, 0, 0);;
+                    planning.LastExecutedTime = new DateTime(now.Year, now.Month, now.Day, 0, 0, 0);
                     planning.DoneInPeriod = false;
                     planning.PushMessageSent = false;
                     if (planning.RepeatType == RepeatType.Week)
