@@ -133,8 +133,13 @@ namespace ServiceItemsPlanningPlugin.Handlers
                     foreach (var caseToDelete in casesToDelete)
                     {
                         Log.LogEvent($"ItemCaseCreateHandler.Task: Trying to retract the case with Id: {caseToDelete.Id}");
-                        var caseDto = await _sdkCore.CaseLookupCaseId(caseToDelete.MicrotingSdkCaseId);
-                        if (caseDto.MicrotingUId != null) await _sdkCore.CaseDelete((int) caseDto.MicrotingUId);
+                        var sdkCase = await microtingDbContext.Cases.SingleOrDefaultAsync(x => x.Id == caseToDelete.MicrotingSdkCaseId);
+                        if (sdkCase is { MicrotingUid: { } })
+                        {
+                            await _sdkCore.CaseDelete((int)sdkCase.MicrotingUid);
+                        }
+                        //var caseDto = await _sdkCore.CaseLookupCaseId(caseToDelete.MicrotingSdkCaseId);
+                        //if (caseDto.MicrotingUId != null) await _sdkCore.CaseDelete((int) caseDto.MicrotingUId);
                         caseToDelete.WorkflowState = Constants.WorkflowStates.Retracted;
                         await caseToDelete.Update(_dbContext);
                     }
