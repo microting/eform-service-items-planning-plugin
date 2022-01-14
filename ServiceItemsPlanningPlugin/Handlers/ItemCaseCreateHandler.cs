@@ -218,7 +218,7 @@ namespace ServiceItemsPlanningPlugin.Handlers
                                 FolderTranslation folderTranslation =
                                     await microtingDbContext.FolderTranslations.SingleOrDefaultAsync(x =>
                                         x.FolderId == folder.Id && x.LanguageId == sdkSite.LanguageId);
-                                body = $"{folderTranslation.Name} ({sdkSite.Name};{DateTime.Now:d, M yyyy})";
+                                body = $"{folderTranslation.Name} ({sdkSite.Name};{DateTime.Now:dd.MM.yyyy})";
                             }
 
                             PlanningNameTranslation planningNameTranslation =
