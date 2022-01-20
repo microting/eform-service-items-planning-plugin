@@ -71,6 +71,11 @@ namespace ServiceItemsPlanningPlugin.Handlers
                 // var site = await sdkDbContext.Sites.SingleOrDefaultAsync(x => x.MicrotingUid == caseDto.SiteUId);
                 var checkListSite = await sdkDbContext.CheckListSites.SingleOrDefaultAsync(x =>
                     x.MicrotingUid == message.MicrotingUId);
+                // if (checkListSite == null)
+                // {
+                //     Console.WriteLine($"Site with MicrotingUid {message.MicrotingUId} not found in items-planning");
+                //     return;
+                // }
                 planningCaseSite =
                     await _dbContext.PlanningCaseSites.SingleOrDefaultAsync(x =>
                         x.MicrotingCheckListSitId == checkListSite.Id);
@@ -100,6 +105,7 @@ namespace ServiceItemsPlanningPlugin.Handlers
                             planningCase.DoneByUserName = site.Name;
                             planningCase.MicrotingSdkeFormId = (int)dbCase.CheckListId;
                             planningCase.WorkflowState = Constants.WorkflowStates.Processed;
+                            planningCase.MicrotingSdkeFormId = (int)dbCase.CheckListId;
                             // planningCase.DoneByUserName = $"{site.Result.FirstName} {site.Result.LastName}";
 
                             planningCase = await SetFieldValue(planningCase, theCase.Id, language);
@@ -115,6 +121,7 @@ namespace ServiceItemsPlanningPlugin.Handlers
                                 DoneByUserId = theCase.DoneById,
                                 DoneByUserName = site.Name,
                                 WorkflowState = Constants.WorkflowStates.Processed,
+                                MicrotingSdkeFormId = (int)dbCase.CheckListId,
                                 PlanningId = planning.Id
                             };
                             await planningCase.Create(_dbContext);
