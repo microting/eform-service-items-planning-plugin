@@ -49,7 +49,7 @@ namespace ServiceItemsPlanningPlugin.Handlers
             _dbContext = dbContextHelper.GetDbContext();
             _sdkCore = sdkCore;
         }
-        
+
         public async Task Handle(PushMessage message)
         {
             Planning planning = await _dbContext.Plannings.SingleOrDefaultAsync(x => x.Id == message.PlanningId);
@@ -77,7 +77,7 @@ namespace ServiceItemsPlanningPlugin.Handlers
                             FolderTranslation folderTranslation =
                                 await microtingDbContext.FolderTranslations.SingleOrDefaultAsync(x =>
                                     x.FolderId == folder.Id && x.LanguageId == site.LanguageId);
-                            body = $"{folderTranslation.Name} ({site.Name};{DateTime.Now:d, M yyyy})";
+                            body = $"{folderTranslation.Name} ({site.Name};{DateTime.Now:dd.MM.yyyy})";
                         }
 
                         PlanningCaseSite planningCaseSite = await _dbContext.PlanningCaseSites.SingleOrDefaultAsync(x =>
