@@ -60,22 +60,14 @@ namespace ServiceItemsPlanningPlugin.Handlers
                 await _dbContext.PlanningCaseSites.SingleOrDefaultAsync(x => x.MicrotingSdkCaseId == message.caseId);
             var dbCase = await sdkDbContext.Cases.SingleOrDefaultAsync(x => x.Id == message.caseId) ?? await sdkDbContext.Cases.SingleOrDefaultAsync(x => x.MicrotingCheckUid == message.CheckId);
 
-            // if (dbCase is { DoneAt: { } })
-            // {
-            //     Console.WriteLine($"Case {message.caseId} is not yet done, so not creating planning case");
-            //     return;
-            // }
-
             if (planningCaseSite == null)
             {
-                // var site = await sdkDbContext.Sites.SingleOrDefaultAsync(x => x.MicrotingUid == caseDto.SiteUId);
                 var checkListSite = await sdkDbContext.CheckListSites.SingleOrDefaultAsync(x =>
                     x.MicrotingUid == message.MicrotingUId);
-                // if (checkListSite == null)
-                // {
-                //     Console.WriteLine($"Site with MicrotingUid {message.MicrotingUId} not found in items-planning");
-                //     return;
-                // }
+                if (checkListSite == null)
+                {
+                    return;
+                }
                 planningCaseSite =
                     await _dbContext.PlanningCaseSites.SingleOrDefaultAsync(x =>
                         x.MicrotingCheckListSitId == checkListSite.Id);
