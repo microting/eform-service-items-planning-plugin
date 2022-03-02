@@ -105,20 +105,23 @@ namespace ServiceItemsPlanningPlugin.Handlers
                         }
                         else
                         {
-                            planningCase = new PlanningCase
+                            if (planningCase == null)
                             {
-                                Status = 100,
-                                MicrotingSdkCaseDoneAt = theCase.DoneAt,
-                                MicrotingSdkCaseId = dbCase.Id,
-                                DoneByUserId = theCase.DoneById,
-                                DoneByUserName = site.Name,
-                                WorkflowState = Constants.WorkflowStates.Processed,
-                                MicrotingSdkeFormId = (int)dbCase.CheckListId,
-                                PlanningId = planning.Id
-                            };
-                            await planningCase.Create(_dbContext);
-                            planningCase = await SetFieldValue(planningCase, theCase.Id, language);
-                            await planningCase.Update(_dbContext);
+                                planningCase = new PlanningCase
+                                {
+                                    Status = 100,
+                                    MicrotingSdkCaseDoneAt = theCase.DoneAt,
+                                    MicrotingSdkCaseId = dbCase.Id,
+                                    DoneByUserId = theCase.DoneById,
+                                    DoneByUserName = site.Name,
+                                    WorkflowState = Constants.WorkflowStates.Processed,
+                                    MicrotingSdkeFormId = (int)dbCase.CheckListId,
+                                    PlanningId = planning.Id
+                                };
+                                await planningCase.Create(_dbContext);
+                                planningCase = await SetFieldValue(planningCase, theCase.Id, language);
+                                await planningCase.Update(_dbContext);
+                            }
                         }
                     }
                     else
