@@ -214,6 +214,14 @@ namespace ServiceItemsPlanningPlugin.Scheduler.Jobs
                     planning.LastExecutedTime = new DateTime(now.Year, now.Month, now.Day, 0, 0, 0);
                     planning.DoneInPeriod = false;
                     planning.PushMessageSent = false;
+                    if (planning.RepeatType == RepeatType.Day)
+                    {
+                        if (planning.RepeatEvery != 0)
+                        {
+                            var nextRun = now.AddDays(planning.RepeatEvery);
+                            planning.NextExecutionTime = nextRun;
+                        }
+                    }
                     if (planning.RepeatType == RepeatType.Week)
                     {
                         if (planning.DayOfWeek != null)
