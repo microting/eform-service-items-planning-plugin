@@ -97,15 +97,13 @@ namespace ServiceItemsPlanningPlugin.Handlers
                             planningCase.DoneByUserName = site.Name;
                             planningCase.MicrotingSdkeFormId = (int)dbCase.CheckListId;
                             planningCase.WorkflowState = Constants.WorkflowStates.Processed;
-                            planningCase.MicrotingSdkeFormId = (int)dbCase.CheckListId;
-                            // planningCase.DoneByUserName = $"{site.Result.FirstName} {site.Result.LastName}";
 
                             planningCase = await SetFieldValue(planningCase, theCase.Id, language);
                             await planningCase.Update(_dbContext);
                         }
                         else
                         {
-                            if (planningCase == null)
+                            if (planningCase == null || planningCase.MicrotingSdkCaseId != dbCase.Id)
                             {
                                 planningCase = new PlanningCase
                                 {
