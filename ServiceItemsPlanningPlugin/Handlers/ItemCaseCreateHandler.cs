@@ -179,7 +179,8 @@ namespace ServiceItemsPlanningPlugin.Handlers
                         mainElement.ElementList[0].Label = mainElement.Label;
                     }
                     mainElement.CheckListFolderName = folderId;
-                    mainElement.EndDate = DateTime.Now.AddYears(10).ToUniversalTime();
+                    // mainElement.EndDate = DateTime.Now.AddYears(10).ToUniversalTime();
+                    mainElement.EndDate = (DateTime) planning.NextExecutionTime;
 
                     var planningCaseSite =
                         await _dbContext.PlanningCaseSites.SingleOrDefaultAsync(x => x.PlanningCaseId == planningCase.Id && x.MicrotingSdkSiteId == siteId);
