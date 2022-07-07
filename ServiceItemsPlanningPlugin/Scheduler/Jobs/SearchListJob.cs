@@ -160,7 +160,7 @@ namespace ServiceItemsPlanningPlugin.Scheduler.Jobs
 
                 var weeklyListsQuery = baseQuery
                     .Where(x => x.RepeatType == RepeatType.Week
-                                && (x.LastExecutedTime == null ||
+                                && ((x.LastExecutedTime == null && x.DayOfWeek == now.DayOfWeek) ||
                                     (now.AddDays(-x.RepeatEvery * 7) >= x.LastExecutedTime &&
                                      x.DayOfWeek == now.DayOfWeek)));
 
