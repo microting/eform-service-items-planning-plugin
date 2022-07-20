@@ -56,16 +56,21 @@ namespace ServiceItemsPlanningPlugin.Handlers
         public async Task Handle(eFormCompleted message)
         {
             await using MicrotingDbContext sdkDbContext = _sdkCore.DbContextHelper.GetDbContext();
+            Console.WriteLine($"Checking PlanningCaseSites with MicrotingSdkCaseId == {message.caseId}");
+            Console.WriteLine($"Checking Cases with Id == {message.caseId}");
+            Console.WriteLine($"Checking Cases with MicrotingCheckUid == {message.CheckId}");
             var planningCaseSite =
                 await _dbContext.PlanningCaseSites.SingleOrDefaultAsync(x => x.MicrotingSdkCaseId == message.caseId);
             var dbCase = await sdkDbContext.Cases.SingleOrDefaultAsync(x => x.Id == message.caseId) ?? await sdkDbContext.Cases.SingleOrDefaultAsync(x => x.MicrotingCheckUid == message.CheckId);
 
             if (planningCaseSite == null)
             {
+                Console.WriteLine($"Checking CheckListSites with MicrotingUid == {message.MicrotingUId}");
                 var checkListSite = await sdkDbContext.CheckListSites.SingleOrDefaultAsync(x =>
                     x.MicrotingUid == message.MicrotingUId);
                 if (checkListSite != null)
                 {
+                    Console.WriteLine($"Checking PlanningCaseSites with MicrotingCheckListSitId == {checkListSite.Id}");
                     planningCaseSite =
                         await _dbContext.PlanningCaseSites.SingleOrDefaultAsync(x =>
                             x.MicrotingCheckListSitId == checkListSite.Id);
