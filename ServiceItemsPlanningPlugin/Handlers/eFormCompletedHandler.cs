@@ -64,13 +64,12 @@ namespace ServiceItemsPlanningPlugin.Handlers
             {
                 var checkListSite = await sdkDbContext.CheckListSites.SingleOrDefaultAsync(x =>
                     x.MicrotingUid == message.MicrotingUId);
-                if (checkListSite == null)
+                if (checkListSite != null)
                 {
-                    return;
+                    planningCaseSite =
+                        await _dbContext.PlanningCaseSites.SingleOrDefaultAsync(x =>
+                            x.MicrotingCheckListSitId == checkListSite.Id);
                 }
-                planningCaseSite =
-                    await _dbContext.PlanningCaseSites.SingleOrDefaultAsync(x =>
-                        x.MicrotingCheckListSitId == checkListSite.Id);
             }
             if (planningCaseSite != null)
             {
