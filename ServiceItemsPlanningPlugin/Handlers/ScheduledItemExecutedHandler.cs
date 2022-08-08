@@ -55,7 +55,7 @@ namespace ServiceItemsPlanningPlugin.Handlers
         {
             var planning = await _dbContext.Plannings
                 .Where(x => x.WorkflowState != Constants.WorkflowStates.Removed)
-                .SingleOrDefaultAsync(x => x.Id == message.PlanningId);
+                .FirstOrDefaultAsync(x => x.Id == message.PlanningId);
 
             var siteIds = _dbContext.PlanningSites
                 .Where(x => x.WorkflowState != Constants.WorkflowStates.Removed

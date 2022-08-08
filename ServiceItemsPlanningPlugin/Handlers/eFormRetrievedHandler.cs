@@ -28,7 +28,6 @@ using Microting.eForm.Infrastructure.Data.Entities;
 
 namespace ServiceItemsPlanningPlugin.Handlers
 {
-    using System.Linq;
     using System.Threading.Tasks;
     using Infrastructure.Helpers;
     using Messages;
@@ -50,18 +49,15 @@ namespace ServiceItemsPlanningPlugin.Handlers
         public async Task Handle(eFormRetrieved message)
         {
             await using MicrotingDbContext sdkDbContext = _sdkCore.DbContextHelper.GetDbContext();
-            Case theCase = await sdkDbContext.Cases.SingleOrDefaultAsync(x => x.MicrotingUid == message.CaseId);
+            Case theCase = await sdkDbContext.Cases.FirstOrDefaultAsync(x => x.MicrotingUid == message.CaseId);
             if (theCase != null)
             {
                 PlanningCaseSite planningCaseSite =
-                    await _dbContext.PlanningCaseSites.SingleOrDefaultAsync(x => x.MicrotingSdkCaseId == theCase.Id);
-                if (planningCaseSite != null)
+                    await _dbContext.PlanningCaseSites.FirstOrDefaultAsync(x => x.MicrotingSdkCaseId == theCase.Id);
+                if (planningCaseSite is { Status: < 77 })
                 {
-                    if (planningCaseSite.Status < 77)
-                    {
-                        planningCaseSite.Status = 77;
-                        await planningCaseSite.Update(_dbContext);
-                    }
+                    planningCaseSite.Status = 77;
+                    await planningCaseSite.Update(_dbContext);
                 }
             }
         }

@@ -60,28 +60,28 @@ namespace ServiceItemsPlanningPlugin.Handlers
             Console.WriteLine($"Checking Cases with Id == {message.caseId}");
             Console.WriteLine($"Checking Cases with MicrotingCheckUid == {message.CheckId}");
             var planningCaseSite =
-                await _dbContext.PlanningCaseSites.SingleOrDefaultAsync(x => x.MicrotingSdkCaseId == message.caseId);
-            var dbCase = await sdkDbContext.Cases.SingleOrDefaultAsync(x => x.Id == message.caseId) ?? await sdkDbContext.Cases.SingleOrDefaultAsync(x => x.MicrotingCheckUid == message.CheckId);
+                await _dbContext.PlanningCaseSites.FirstOrDefaultAsync(x => x.MicrotingSdkCaseId == message.caseId);
+            var dbCase = await sdkDbContext.Cases.FirstOrDefaultAsync(x => x.Id == message.caseId) ?? await sdkDbContext.Cases.FirstOrDefaultAsync(x => x.MicrotingCheckUid == message.CheckId);
 
             if (planningCaseSite == null)
             {
                 Console.WriteLine($"Checking CheckListSites with MicrotingUid == {message.MicrotingUId}");
-                var checkListSite = await sdkDbContext.CheckListSites.SingleOrDefaultAsync(x =>
+                var checkListSite = await sdkDbContext.CheckListSites.FirstOrDefaultAsync(x =>
                     x.MicrotingUid == message.MicrotingUId);
                 if (checkListSite != null)
                 {
                     Console.WriteLine($"Checking PlanningCaseSites with MicrotingCheckListSitId == {checkListSite.Id}");
                     planningCaseSite =
-                        await _dbContext.PlanningCaseSites.SingleOrDefaultAsync(x =>
+                        await _dbContext.PlanningCaseSites.FirstOrDefaultAsync(x =>
                             x.MicrotingCheckListSitId == checkListSite.Id);
                 }
             }
             if (planningCaseSite != null)
             {
                 Planning planning =
-                await _dbContext.Plannings.SingleAsync(x => x.Id == planningCaseSite.PlanningId);
-                Site site = await sdkDbContext.Sites.SingleAsync(x => x.Id == dbCase.SiteId);
-                Language language = await sdkDbContext.Languages.SingleAsync(x => x.Id == site.LanguageId);
+                await _dbContext.Plannings.FirstAsync(x => x.Id == planningCaseSite.PlanningId);
+                Site site = await sdkDbContext.Sites.FirstAsync(x => x.Id == dbCase.SiteId);
+                Language language = await sdkDbContext.Languages.FirstAsync(x => x.Id == site.LanguageId);
                 if (dbCase.MicrotingUid != null && dbCase.MicrotingCheckUid != null)
                 {
                     ReplyElement theCase =
@@ -90,7 +90,7 @@ namespace ServiceItemsPlanningPlugin.Handlers
                     if (planning.RepeatType == RepeatType.Day && planning.RepeatEvery == 0)
                     {
                         var planningCase =
-                        await _dbContext.PlanningCases.SingleOrDefaultAsync(x =>
+                        await _dbContext.PlanningCases.FirstOrDefaultAsync(x =>
                             x.Id == planningCaseSite.PlanningCaseId);
                         if (planningCase != null && planningCase.Status != 100)
                         {
@@ -180,7 +180,7 @@ namespace ServiceItemsPlanningPlugin.Handlers
         private async Task<PlanningCaseSite> SetFieldValue(PlanningCaseSite planningCaseSite, int caseId,
             Language language)
         {
-            var planning = _dbContext.Plannings.SingleOrDefault(x => x.Id == planningCaseSite.PlanningId);
+            var planning = _dbContext.Plannings.FirstOrDefault(x => x.Id == planningCaseSite.PlanningId);
             var caseIds = new List<int>
             {
                 planningCaseSite.MicrotingSdkCaseId
@@ -209,7 +209,7 @@ namespace ServiceItemsPlanningPlugin.Handlers
 
         private async Task<PlanningCase> SetFieldValue(PlanningCase planningCase, int caseId, Language language)
         {
-            var planning = await _dbContext.Plannings.SingleOrDefaultAsync(x => x.Id == planningCase.PlanningId).ConfigureAwait(false);
+            var planning = await _dbContext.Plannings.FirstOrDefaultAsync(x => x.Id == planningCase.PlanningId).ConfigureAwait(false);
             var caseIds = new List<int> { planningCase.MicrotingSdkCaseId };
             var fieldValues = await _sdkCore.Advanced_FieldValueReadList(caseIds, language).ConfigureAwait(false);
 

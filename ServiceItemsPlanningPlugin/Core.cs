@@ -183,33 +183,18 @@ namespace ServiceItemsPlanningPlugin
 
         public bool Stop(bool shutdownReallyFast)
         {
-            try
+            if (_coreAvailable && !_coreStatChanging)
             {
-                if (_coreAvailable && !_coreStatChanging)
-                {
-                    _coreStatChanging = true;
+                _coreStatChanging = true;
 
-                    _coreAvailable = false;
+                _coreAvailable = false;
 
-                    var tries = 0;
-                    while (_coreThreadRunning)
-                    {
-                        Thread.Sleep(100);
-                        _bus.Dispose();
-                        tries++;
-                    }
-                    _sdkCore.Close();
+                _sdkCore.Close();
 
-                    _coreStatChanging = false;
-                }
-
-                _scheduleTimer.Dispose();
+                _coreStatChanging = false;
             }
-            catch (ThreadAbortException)
-            {
-                //"Even if you handle it, it will be automatically re-thrown by the CLR at the end of the try/catch/finally."
-                Thread.ResetAbort(); //This ends the re-throwning
-            }
+
+            _scheduleTimer.Dispose();
 
             return true;
         }

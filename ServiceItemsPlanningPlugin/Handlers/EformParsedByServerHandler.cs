@@ -49,18 +49,15 @@ namespace ServiceItemsPlanningPlugin.Handlers
         public async Task Handle(EformParsedByServer message)
         {
             await using MicrotingDbContext sdkDbContext = _sdkCore.DbContextHelper.GetDbContext();
-            Case theCase = await sdkDbContext.Cases.SingleOrDefaultAsync(x => x.MicrotingUid == message.CaseId);
+            Case theCase = await sdkDbContext.Cases.FirstOrDefaultAsync(x => x.MicrotingUid == message.CaseId);
             if (theCase != null)
             {
                 PlanningCaseSite planningCaseSite =
-                    await _dbContext.PlanningCaseSites.SingleOrDefaultAsync(x => x.MicrotingSdkCaseId == theCase.Id);
-                if (planningCaseSite != null)
+                    await _dbContext.PlanningCaseSites.FirstOrDefaultAsync(x => x.MicrotingSdkCaseId == theCase.Id);
+                if (planningCaseSite is { Status: < 70 })
                 {
-                    if (planningCaseSite.Status < 70)
-                    {
-                        planningCaseSite.Status = 70;
-                        await planningCaseSite.Update(_dbContext);
-                    }
+                    planningCaseSite.Status = 70;
+                    await planningCaseSite.Update(_dbContext);
                 }
             }
         }

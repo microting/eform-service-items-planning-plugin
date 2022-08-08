@@ -44,14 +44,11 @@ namespace ServiceItemsPlanningPlugin.Handlers
 #pragma warning disable 1998
         public async Task Handle(EformParsingError message)
         {
-            PlanningCaseSite planningCaseSite = _dbContext.PlanningCaseSites.SingleOrDefault(x => x.MicrotingSdkCaseId == message.CaseId);
-            if (planningCaseSite != null)
+            PlanningCaseSite planningCaseSite = _dbContext.PlanningCaseSites.FirstOrDefault(x => x.MicrotingSdkCaseId == message.CaseId);
+            if (planningCaseSite is { Status: < 110 })
             {
-                if (planningCaseSite.Status < 110)
-                {
-                    planningCaseSite.Status = 110;
-                    await planningCaseSite.Update(_dbContext);
-                }
+                planningCaseSite.Status = 110;
+                await planningCaseSite.Update(_dbContext);
             }
         }
     }

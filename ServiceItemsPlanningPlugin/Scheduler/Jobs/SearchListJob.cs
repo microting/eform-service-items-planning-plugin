@@ -22,8 +22,6 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-using Microting.eForm.Infrastructure.Models;
-
 namespace ServiceItemsPlanningPlugin.Scheduler.Jobs
 {
     using System;
@@ -106,7 +104,7 @@ namespace ServiceItemsPlanningPlugin.Scheduler.Jobs
 
             foreach (Planning planning in pushReadyPlannings)
             {
-                if ((((DateTime) planning.NextExecutionTime).Date - now.Date).Days == planning.DaysBeforeRedeploymentPushMessage)
+                if ((((DateTime) planning.NextExecutionTime!).Date - now.Date).Days == planning.DaysBeforeRedeploymentPushMessage)
                 {
                     await _bus.SendLocal(new PushMessage(planning.Id));
                 }

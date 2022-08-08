@@ -52,14 +52,14 @@ namespace ServiceItemsPlanningPlugin.Handlers
 
         public async Task Handle(PlanningCaseSingleCreate message)
         {
-            var planning = await _dbContext.Plannings.SingleOrDefaultAsync(x => x.Id == message.PlanningId);
+            var planning = await _dbContext.Plannings.FirstAsync(x => x.Id == message.PlanningId);
             var siteId = message.PlanningSiteId;
             await using MicrotingDbContext sdkDbContext = _sdkCore.DbContextHelper.GetDbContext();
-            var sdkSite = await sdkDbContext.Sites.SingleAsync(x => x.Id == siteId);
-            Language language = await sdkDbContext.Languages.SingleAsync(x => x.Id == sdkSite.LanguageId);
+            var sdkSite = await sdkDbContext.Sites.FirstAsync(x => x.Id == siteId);
+            Language language = await sdkDbContext.Languages.FirstAsync(x => x.Id == sdkSite.LanguageId);
             var mainElement = await _sdkCore.ReadeForm(message.RelatedEFormId, language);
 
-            var folder = await sdkDbContext.Folders.SingleAsync(x => x.Id == planning.SdkFolderId);
+            var folder = await sdkDbContext.Folders.FirstAsync(x => x.Id == planning.SdkFolderId);
             var folderId = folder.MicrotingUid.ToString();
 
             var planningCase = await _dbContext.PlanningCases
@@ -67,7 +67,7 @@ namespace ServiceItemsPlanningPlugin.Handlers
                 .Where(x => x.PlanningId == planning.Id)
                 .Where(x => x.Status == 66)
                 .Where(x => x.MicrotingSdkeFormId == message.RelatedEFormId)
-                .SingleOrDefaultAsync();
+                .FirstOrDefaultAsync();
 
             if (planningCase == null)
             {
@@ -122,19 +122,10 @@ namespace ServiceItemsPlanningPlugin.Handlers
             mainElement.ElementList[0].Label = mainElement.Label;
             mainElement.CheckListFolderName = folderId;
             mainElement.StartDate = DateTime.Now.ToUniversalTime();
-            // mainElement.EndDate = DateTime.Now.AddYears(10).ToUniversalTime();
-            mainElement.EndDate = (DateTime) planning.NextExecutionTime;
-            // mainElement.PushMessageBody = mainElement.Label;
-            // mainElement.PushMessageTitle = folder.Name;
-            // if (folder.ParentId != null)
-            // {
-            //     var parentFolder = await sdkDbContext.Folders.SingleAsync(x => x.Id == folder.ParentId);
-            //     mainElement.PushMessageTitle = parentFolder.Name;
-            //     mainElement.PushMessageBody = $"{folder.Name}\n{mainElement.Label}";
-            // }
+            mainElement.EndDate = (DateTime) planning.NextExecutionTime!;
 
             var planningCaseSite =
-                await _dbContext.PlanningCaseSites.SingleOrDefaultAsync(x =>
+                await _dbContext.PlanningCaseSites.FirstOrDefaultAsync(x =>
                     x.PlanningCaseId == planningCase.Id && x.MicrotingSdkSiteId == siteId);
 
             if (planningCaseSite == null)
@@ -162,7 +153,7 @@ namespace ServiceItemsPlanningPlugin.Handlers
 
             if (planningCaseSite.MicrotingSdkCaseId < 1)
             {
-                var caseId = await _sdkCore.CaseCreate(mainElement, "", (int) sdkSite.MicrotingUid, null);
+                var caseId = await _sdkCore.CaseCreate(mainElement, "", (int) sdkSite.MicrotingUid!, null);
                 if (caseId != null)
                 {
                     var caseDto = await _sdkCore.CaseLookupMUId((int) caseId);
