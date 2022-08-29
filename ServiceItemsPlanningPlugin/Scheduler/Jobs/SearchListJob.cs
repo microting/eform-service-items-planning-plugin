@@ -71,42 +71,33 @@ namespace ServiceItemsPlanningPlugin.Scheduler.Jobs
 
         private async Task ExecutePush()
         {
-            if (DateTime.UtcNow.Hour < 7)
+            if (DateTime.UtcNow.Hour == 6)
             {
-                Log.LogEvent($"SearchListJob.Task: ExecutePush The current hour is smaller than the start time of 7, so ending processing");
-                return;
-            }
+                Log.LogEvent("SearchListJob.Task: SearchListJob.Execute got called");
+                var now = DateTime.UtcNow;
 
-            if (DateTime.UtcNow.Hour > 9)
-            {
-                Log.LogEvent($"SearchListJob.Task: ExecutePush The current hour is bigger than the end time of 9, so ending processing");
-                return;
-            }
+                var baseQuery = _dbContext.Plannings
+                    .Where(x =>
+                        (x.RepeatUntil == null || DateTime.UtcNow <= x.RepeatUntil)
+                        &&
+                        (DateTime.UtcNow >= x.StartDate)
+                        &&
+                        x.DaysBeforeRedeploymentPushMessageRepeat == true
+                        &&
+                        x.WorkflowState != Constants.WorkflowStates.Removed);
 
-            Log.LogEvent("SearchListJob.Task: SearchListJob.Execute got called");
-            var now = DateTime.UtcNow;
+                var pushReady = baseQuery.Where(x => !x.DoneInPeriod).Where(x => x.NextExecutionTime > now)
+                    .Where(x => x.RepeatType != RepeatType.Day).Where(x => !x.PushMessageSent);
 
-            var baseQuery = _dbContext.Plannings
-                .Where(x =>
-                    (x.RepeatUntil == null || DateTime.UtcNow <= x.RepeatUntil)
-                    &&
-                    (DateTime.UtcNow >= x.StartDate)
-                    &&
-                    x.WorkflowState != Constants.WorkflowStates.Removed);
+                var pushReadyPlannings = await pushReady.ToListAsync();
 
-            var pushReady = baseQuery.
-                Where(x => !x.DoneInPeriod).
-                Where(x => x.NextExecutionTime > now).
-                Where(x => x.RepeatType != RepeatType.Day).
-                Where(x => !x.PushMessageSent);
-
-            var pushReadyPlannings = await pushReady.ToListAsync();
-
-            foreach (Planning planning in pushReadyPlannings)
-            {
-                if ((((DateTime) planning.NextExecutionTime!).Date - now.Date).Days == planning.DaysBeforeRedeploymentPushMessage)
+                foreach (Planning planning in pushReadyPlannings)
                 {
-                    await _bus.SendLocal(new PushMessage(planning.Id));
+                    if ((((DateTime)planning.NextExecutionTime!).Date - now.Date).Days ==
+                        planning.DaysBeforeRedeploymentPushMessage)
+                    {
+                        await _bus.SendLocal(new PushMessage(planning.Id));
+                    }
                 }
             }
         }
