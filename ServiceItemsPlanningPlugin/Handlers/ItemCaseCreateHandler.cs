@@ -146,7 +146,7 @@ namespace ServiceItemsPlanningPlugin.Handlers
                     mainElement.EndDate = (DateTime) planning.NextExecutionTime;
 
                     var planningCaseSite =
-                        await _dbContext.PlanningCaseSites.SingleOrDefaultAsync(x => x.PlanningCaseId == planningCase.Id && x.MicrotingSdkSiteId == siteId);
+                        await _dbContext.PlanningCaseSites.FirstOrDefaultAsync(x => x.PlanningCaseId == planningCase.Id && x.MicrotingSdkSiteId == siteId);
 
                     if (planningCaseSite == null)
                     {

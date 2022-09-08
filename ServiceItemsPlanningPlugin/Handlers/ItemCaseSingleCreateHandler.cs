@@ -99,7 +99,7 @@ namespace ServiceItemsPlanningPlugin.Handlers
             }
 
             var translation = _dbContext.PlanningNameTranslation
-                .Single(x => x.LanguageId == language.Id && x.PlanningId == planning.Id).Name;
+                .First(x => x.LanguageId == language.Id && x.PlanningId == planning.Id).Name;
 
             mainElement.Label = string.IsNullOrEmpty(planning.PlanningNumber) ? "" : planning.PlanningNumber;
             if (!string.IsNullOrEmpty(translation))

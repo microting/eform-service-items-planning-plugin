@@ -133,12 +133,12 @@ namespace ServiceItemsPlanningPlugin.Handlers
 
                         planningCaseSite.MicrotingSdkCaseDoneAt = theCase.DoneAt;
                         planningCaseSite.DoneByUserId = theCase.DoneById;
-                        var worker = await sdkDbContext.Workers.SingleAsync(x => x.Id == planningCaseSite.DoneByUserId);
+                        var worker = await sdkDbContext.Workers.FirstAsync(x => x.Id == planningCaseSite.DoneByUserId);
                         planningCaseSite.DoneByUserName = $"{worker.FirstName} {worker.LastName}";
                         await planningCaseSite.Update(_dbContext);
 
                         var planningCase =
-                            await _dbContext.PlanningCases.SingleOrDefaultAsync(x =>
+                            await _dbContext.PlanningCases.FirstOrDefaultAsync(x =>
                                 x.Id == planningCaseSite.PlanningCaseId);
                         if (planningCase.Status != 100)
                         {
