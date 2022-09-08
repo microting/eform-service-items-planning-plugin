@@ -48,7 +48,7 @@ namespace ServiceItemsPlanningPlugin
         private eFormCore.Core _sdkCore;
         private IWindsorContainer _container;
         private IBus _bus;
-        private bool _coreThreadRunning = false;
+        // private bool _coreThreadRunning = false;
         private bool _coreStatChanging;
         private bool _coreAvailable;
         private string _serviceLocation;
@@ -204,7 +204,7 @@ namespace ServiceItemsPlanningPlugin
             return true;
         }
 
-        public void StartSdkCoreSqlOnly(string sdkConnectionString)
+        private void StartSdkCoreSqlOnly(string sdkConnectionString)
         {
             _sdkCore = new eFormCore.Core();
 
