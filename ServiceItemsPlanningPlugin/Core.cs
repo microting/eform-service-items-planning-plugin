@@ -122,7 +122,6 @@ namespace ServiceItemsPlanningPlugin
 
                 var pluginDbName = $"Database={dbPrefix}_eform-angular-items-planning-plugin;";
                 var connectionString = sdkConnectionString.Replace(dbNameSection, pluginDbName);
-                string rabbitmqHost = connectionString.Contains("frontend") ? $"frontend-{dbPrefix}-rabbitmq" :"localhost";
 
                 if (!_coreAvailable && !_coreStatChanging)
                 {
@@ -146,6 +145,10 @@ namespace ServiceItemsPlanningPlugin
                     _coreStatChanging = false;
 
                     StartSdkCoreSqlOnly(sdkConnectionString);
+                    Console.WriteLine($"Connection string: {sdkConnectionString}");
+
+                    var rabbitmqHost = _sdkCore.GetSdkSetting(Settings.rabbitMqHost).GetAwaiter().GetResult();
+                    Console.WriteLine($"rabbitmqHost: {rabbitmqHost}");
 
                     string temp = _dbContext.PluginConfigurationValues
                         .SingleOrDefault(x => x.Name == "ItemsPlanningBaseSettings:MaxParallelism")?.Value;
