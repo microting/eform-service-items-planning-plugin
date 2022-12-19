@@ -211,7 +211,7 @@ namespace ServiceItemsPlanningPlugin
         {
             _sdkCore = new eFormCore.Core();
 
-            _sdkCore.StartSqlOnly(sdkConnectionString);
+            _sdkCore.StartSqlOnly(sdkConnectionString).GetAwaiter().GetResult();
         }
 
         private void ConfigureScheduler()
