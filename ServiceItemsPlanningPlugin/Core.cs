@@ -149,6 +149,10 @@ namespace ServiceItemsPlanningPlugin
 
                     var rabbitmqHost = _sdkCore.GetSdkSetting(Settings.rabbitMqHost).GetAwaiter().GetResult();
                     Console.WriteLine($"rabbitmqHost: {rabbitmqHost}");
+                    var rabbitMqUser = _sdkCore.GetSdkSetting(Settings.rabbitMqUser).GetAwaiter().GetResult();
+                    Console.WriteLine($"rabbitMqUser: {rabbitMqUser}");
+                    var rabbitMqPassword = _sdkCore.GetSdkSetting(Settings.rabbitMqPassword).GetAwaiter().GetResult();
+                    Console.WriteLine($"rabbitMqPassword: {rabbitMqPassword}");
 
                     string temp = _dbContext.PluginConfigurationValues
                         .SingleOrDefault(x => x.Name == "ItemsPlanningBaseSettings:MaxParallelism")?.Value;
@@ -165,7 +169,7 @@ namespace ServiceItemsPlanningPlugin
                     _container.Register(Component.For<eFormCore.Core>().Instance(_sdkCore));
                     _container.Install(
                         new RebusHandlerInstaller()
-                        , new RebusInstaller(connectionString, _maxParallelism, _numberOfWorkers, "admin", "password", rabbitmqHost)
+                        , new RebusInstaller(dbPrefix, connectionString, _maxParallelism, _numberOfWorkers, rabbitMqUser, rabbitMqPassword, rabbitmqHost)
                     );
                     _container.Register(Component.For<SearchListJob>());
 
