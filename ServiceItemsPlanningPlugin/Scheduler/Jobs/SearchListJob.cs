@@ -223,20 +223,20 @@ namespace ServiceItemsPlanningPlugin.Scheduler.Jobs
                                     planning.LastExecutedTime.Value.Year == now.Year)
                                 {
                                     planning.NextExecutionTime =
-                                        new DateTime(now.Year + 1, planning.RepeatEvery, (int)planning.DayOfMonth!, 0,
+                                        new DateTime(now.Year + 1, 1, (int)planning.DayOfMonth!, 0,
                                             0, 0);
                                 }
                                 else
                                 {
                                     planning.NextExecutionTime =
-                                        new DateTime(now.Year, planning.RepeatEvery, (int)planning.DayOfMonth!, 0, 0,
+                                        new DateTime(now.Year, 1, (int)planning.DayOfMonth!, 0, 0,
                                             0);
                                 }
                             }
                             else
                             {
                                 planning.NextExecutionTime =
-                                    new DateTime(now.Year, planning.RepeatEvery, (int)planning.DayOfMonth!, 0, 0, 0);
+                                    new DateTime(now.Year, planning.RepeatEvery + 1, (int)planning.DayOfMonth!, 0, 0, 0);
                             }
                         }
 
