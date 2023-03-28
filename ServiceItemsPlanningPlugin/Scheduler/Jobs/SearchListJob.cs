@@ -267,6 +267,7 @@ namespace ServiceItemsPlanningPlugin.Scheduler.Jobs
 
                 var planningsForExecution = await baseQuery
                     .Where(x =>x.NextExecutionTime <= now)
+                    .Where(x => x.RepeatEvery != 0 && x.RepeatType != RepeatType.Day)
                     .ToListAsync();
 
 //            Console.WriteLine($"Daily lists query: {dailyListsQuery.ToSql()}");
@@ -318,7 +319,7 @@ namespace ServiceItemsPlanningPlugin.Scheduler.Jobs
                     {
                         if (planning.RepeatEvery != 0)
                         {
-                            planning.NextExecutionTime = ((DateTime)planning.NextExecutionTime!).AddDays(planning.RepeatEvery);;
+                            planning.NextExecutionTime = ((DateTime)planning.NextExecutionTime!).AddDays(planning.RepeatEvery);
                         }
                     }
                     if (planning.RepeatType == RepeatType.Week)
