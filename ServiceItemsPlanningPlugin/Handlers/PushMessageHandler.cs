@@ -37,75 +37,74 @@ using Rebus.Handlers;
 using ServiceItemsPlanningPlugin.Infrastructure.Helpers;
 using ServiceItemsPlanningPlugin.Messages;
 
-namespace ServiceItemsPlanningPlugin.Handlers
+namespace ServiceItemsPlanningPlugin.Handlers;
+
+public class PushMessageHandler : IHandleMessages<PushMessage>
 {
-    public class PushMessageHandler : IHandleMessages<PushMessage>
+    private readonly eFormCore.Core _sdkCore;
+    private readonly ItemsPlanningPnDbContext _dbContext;
+
+    public PushMessageHandler(eFormCore.Core sdkCore, DbContextHelper dbContextHelper)
     {
-        private readonly eFormCore.Core _sdkCore;
-        private readonly ItemsPlanningPnDbContext _dbContext;
+        _dbContext = dbContextHelper.GetDbContext();
+        _sdkCore = sdkCore;
+    }
 
-        public PushMessageHandler(eFormCore.Core sdkCore, DbContextHelper dbContextHelper)
+    public async Task Handle(PushMessage message)
+    {
+        Planning planning = await _dbContext.Plannings.FirstOrDefaultAsync(x => x.Id == message.PlanningId);
+        if (planning != null)
         {
-            _dbContext = dbContextHelper.GetDbContext();
-            _sdkCore = sdkCore;
-        }
-
-        public async Task Handle(PushMessage message)
-        {
-            Planning planning = await _dbContext.Plannings.FirstOrDefaultAsync(x => x.Id == message.PlanningId);
-            if (planning != null)
-            {
-                await using MicrotingDbContext microtingDbContext = _sdkCore.DbContextHelper.GetDbContext();
-                List<PlanningSite> planningSites =
+            await using MicrotingDbContext microtingDbContext = _sdkCore.DbContextHelper.GetDbContext();
+            List<PlanningSite> planningSites =
                 await _dbContext.PlanningSites.Where(x => x.PlanningId == message.PlanningId && x.WorkflowState != Constants.WorkflowStates.Removed).ToListAsync();
 
-                foreach (PlanningSite planningSite in planningSites)
-                {
-                    Site site = await microtingDbContext.Sites.FirstOrDefaultAsync(x => x.Id == planningSite.SiteId);
-                    if (site != null)
-                    {
-                        PlanningNameTranslation planningNameTranslation =
-                            await _dbContext.PlanningNameTranslation.FirstAsync(x =>
-                                x.PlanningId == planning.Id
-                                && x.LanguageId == site.LanguageId);
-
-                        var folder = await GetTopFolderName((int)planning.SdkFolderId!, microtingDbContext);
-                        string body = "";
-                        if (folder != null)
-                        {
-                            planning.SdkFolderId = microtingDbContext.Folders.First(y => y.Id == planning.SdkFolderId).Id;
-                            FolderTranslation folderTranslation =
-                                await microtingDbContext.FolderTranslations.FirstAsync(x =>
-                                    x.FolderId == folder.Id && x.LanguageId == site.LanguageId);
-                            body = $"{folderTranslation.Name} ({site.Name};{DateTime.Now:dd.MM.yyyy})";
-                        }
-
-                        PlanningCaseSite planningCaseSite = await _dbContext.PlanningCaseSites.FirstOrDefaultAsync(x =>
-                            x.PlanningId == planningSite.PlanningId
-                            && x.MicrotingSdkSiteId == planningSite.SiteId
-                            && x.Status != 100
-                            && x.WorkflowState == Constants.WorkflowStates.Created);
-                        Log.LogEvent($"[DBG] ItemsPlanningService PushMessageHandler.Handle : Sending push message body: {body}, title : {planningNameTranslation.Name} to site.id : {site.Id}");
-                        Case @case =
-                            await microtingDbContext.Cases.FirstAsync(x =>
-                                x.Id == planningCaseSite.MicrotingSdkCaseId);
-                        await _sdkCore.SendPushMessage(site.Id, planningNameTranslation.Name, body, (int)@case.MicrotingUid!);
-                    }
-                }
-
-                planning.PushMessageSent = true;
-                await planning.Update(_dbContext);
-            }
-        }
-
-        private async Task<Folder> GetTopFolderName(int folderId, MicrotingDbContext dbContext)
-        {
-            var result = await dbContext.Folders.FirstAsync(y => y.Id == folderId);
-            if (result.ParentId != null)
+            foreach (PlanningSite planningSite in planningSites)
             {
-                result = await GetTopFolderName((int)result.ParentId, dbContext);
+                Site site = await microtingDbContext.Sites.FirstOrDefaultAsync(x => x.Id == planningSite.SiteId);
+                if (site != null)
+                {
+                    PlanningNameTranslation planningNameTranslation =
+                        await _dbContext.PlanningNameTranslation.FirstAsync(x =>
+                            x.PlanningId == planning.Id
+                            && x.LanguageId == site.LanguageId);
+
+                    var folder = await GetTopFolderName((int)planning.SdkFolderId!, microtingDbContext);
+                    string body = "";
+                    if (folder != null)
+                    {
+                        planning.SdkFolderId = microtingDbContext.Folders.First(y => y.Id == planning.SdkFolderId).Id;
+                        FolderTranslation folderTranslation =
+                            await microtingDbContext.FolderTranslations.FirstAsync(x =>
+                                x.FolderId == folder.Id && x.LanguageId == site.LanguageId);
+                        body = $"{folderTranslation.Name} ({site.Name};{DateTime.Now:dd.MM.yyyy})";
+                    }
+
+                    PlanningCaseSite planningCaseSite = await _dbContext.PlanningCaseSites.FirstOrDefaultAsync(x =>
+                        x.PlanningId == planningSite.PlanningId
+                        && x.MicrotingSdkSiteId == planningSite.SiteId
+                        && x.Status != 100
+                        && x.WorkflowState == Constants.WorkflowStates.Created);
+                    Log.LogEvent($"[DBG] ItemsPlanningService PushMessageHandler.Handle : Sending push message body: {body}, title : {planningNameTranslation.Name} to site.id : {site.Id}");
+                    Case @case =
+                        await microtingDbContext.Cases.FirstAsync(x =>
+                            x.Id == planningCaseSite.MicrotingSdkCaseId);
+                    await _sdkCore.SendPushMessage(site.Id, planningNameTranslation.Name, body, (int)@case.MicrotingUid!);
+                }
             }
-            return result;
+
+            planning.PushMessageSent = true;
+            await planning.Update(_dbContext);
         }
+    }
+
+    private async Task<Folder> GetTopFolderName(int folderId, MicrotingDbContext dbContext)
+    {
+        var result = await dbContext.Folders.FirstAsync(y => y.Id == folderId);
+        if (result.ParentId != null)
+        {
+            result = await GetTopFolderName((int)result.ParentId, dbContext);
+        }
+        return result;
     }
 }

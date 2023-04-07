@@ -26,39 +26,38 @@ using Microsoft.EntityFrameworkCore;
 using Microting.eForm.Infrastructure;
 using Microting.eForm.Infrastructure.Data.Entities;
 
-namespace ServiceItemsPlanningPlugin.Handlers
+namespace ServiceItemsPlanningPlugin.Handlers;
+
+using System.Threading.Tasks;
+using Infrastructure.Helpers;
+using Messages;
+using Microting.ItemsPlanningBase.Infrastructure.Data;
+using Microting.ItemsPlanningBase.Infrastructure.Data.Entities;
+using Rebus.Handlers;
+
+public class EFormRetrievedHandler : IHandleMessages<eFormRetrieved>
 {
-    using System.Threading.Tasks;
-    using Infrastructure.Helpers;
-    using Messages;
-    using Microting.ItemsPlanningBase.Infrastructure.Data;
-    using Microting.ItemsPlanningBase.Infrastructure.Data.Entities;
-    using Rebus.Handlers;
+    private readonly eFormCore.Core _sdkCore;
+    private readonly ItemsPlanningPnDbContext _dbContext;
 
-    public class EFormRetrievedHandler : IHandleMessages<eFormRetrieved>
+    public EFormRetrievedHandler(eFormCore.Core sdkCore, DbContextHelper dbContextHelper)
     {
-        private readonly eFormCore.Core _sdkCore;
-        private readonly ItemsPlanningPnDbContext _dbContext;
+        _dbContext = dbContextHelper.GetDbContext();
+        _sdkCore = sdkCore;
+    }
 
-        public EFormRetrievedHandler(eFormCore.Core sdkCore, DbContextHelper dbContextHelper)
+    public async Task Handle(eFormRetrieved message)
+    {
+        await using MicrotingDbContext sdkDbContext = _sdkCore.DbContextHelper.GetDbContext();
+        Case theCase = await sdkDbContext.Cases.FirstOrDefaultAsync(x => x.MicrotingUid == message.CaseId);
+        if (theCase != null)
         {
-            _dbContext = dbContextHelper.GetDbContext();
-            _sdkCore = sdkCore;
-        }
-
-        public async Task Handle(eFormRetrieved message)
-        {
-            await using MicrotingDbContext sdkDbContext = _sdkCore.DbContextHelper.GetDbContext();
-            Case theCase = await sdkDbContext.Cases.FirstOrDefaultAsync(x => x.MicrotingUid == message.CaseId);
-            if (theCase != null)
+            PlanningCaseSite planningCaseSite =
+                await _dbContext.PlanningCaseSites.FirstOrDefaultAsync(x => x.MicrotingSdkCaseId == theCase.Id);
+            if (planningCaseSite is { Status: < 77 })
             {
-                PlanningCaseSite planningCaseSite =
-                    await _dbContext.PlanningCaseSites.FirstOrDefaultAsync(x => x.MicrotingSdkCaseId == theCase.Id);
-                if (planningCaseSite is { Status: < 77 })
-                {
-                    planningCaseSite.Status = 77;
-                    await planningCaseSite.Update(_dbContext);
-                }
+                planningCaseSite.Status = 77;
+                await planningCaseSite.Update(_dbContext);
             }
         }
     }

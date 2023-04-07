@@ -30,26 +30,25 @@ using Rebus.Handlers;
 using ServiceItemsPlanningPlugin.Infrastructure.Helpers;
 using ServiceItemsPlanningPlugin.Messages;
 
-namespace ServiceItemsPlanningPlugin.Handlers
-{
-    public class EformParsingErrorHandler : IHandleMessages<EformParsingError>
-    {
-        private readonly ItemsPlanningPnDbContext _dbContext;
+namespace ServiceItemsPlanningPlugin.Handlers;
 
-        public EformParsingErrorHandler(DbContextHelper dbContextHelper)
-        {
-            _dbContext = dbContextHelper.GetDbContext();
-        }
+public class EformParsingErrorHandler : IHandleMessages<EformParsingError>
+{
+    private readonly ItemsPlanningPnDbContext _dbContext;
+
+    public EformParsingErrorHandler(DbContextHelper dbContextHelper)
+    {
+        _dbContext = dbContextHelper.GetDbContext();
+    }
 
 #pragma warning disable 1998
-        public async Task Handle(EformParsingError message)
+    public async Task Handle(EformParsingError message)
+    {
+        PlanningCaseSite planningCaseSite = _dbContext.PlanningCaseSites.FirstOrDefault(x => x.MicrotingSdkCaseId == message.CaseId);
+        if (planningCaseSite is { Status: < 110 })
         {
-            PlanningCaseSite planningCaseSite = _dbContext.PlanningCaseSites.FirstOrDefault(x => x.MicrotingSdkCaseId == message.CaseId);
-            if (planningCaseSite is { Status: < 110 })
-            {
-                planningCaseSite.Status = 110;
-                await planningCaseSite.Update(_dbContext);
-            }
+            planningCaseSite.Status = 110;
+            await planningCaseSite.Update(_dbContext);
         }
     }
 }

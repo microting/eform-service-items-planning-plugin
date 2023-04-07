@@ -22,25 +22,24 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-namespace ServiceItemsPlanningPlugin.Infrastructure.Helpers
+namespace ServiceItemsPlanningPlugin.Infrastructure.Helpers;
+
+using Microting.ItemsPlanningBase.Infrastructure.Data;
+using Microting.ItemsPlanningBase.Infrastructure.Data.Factories;
+
+public class DbContextHelper
 {
-    using Microting.ItemsPlanningBase.Infrastructure.Data;
-    using Microting.ItemsPlanningBase.Infrastructure.Data.Factories;
+    private string ConnectionString { get;}
 
-    public class DbContextHelper
+    public DbContextHelper(string connectionString)
     {
-        private string ConnectionString { get;}
+        ConnectionString = connectionString;
+    }
 
-        public DbContextHelper(string connectionString)
-        {
-            ConnectionString = connectionString;
-        }
+    public ItemsPlanningPnDbContext GetDbContext()
+    {
+        ItemsPlanningPnContextFactory contextFactory = new ItemsPlanningPnContextFactory();
 
-        public ItemsPlanningPnDbContext GetDbContext()
-        {
-            ItemsPlanningPnContextFactory contextFactory = new ItemsPlanningPnContextFactory();
-
-            return contextFactory.CreateDbContext(new[] { ConnectionString });
-        }
+        return contextFactory.CreateDbContext(new[] { ConnectionString });
     }
 }

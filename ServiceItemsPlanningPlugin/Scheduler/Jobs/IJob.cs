@@ -22,12 +22,11 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-namespace ServiceItemsPlanningPlugin.Scheduler.Jobs
-{
-    using System.Threading.Tasks;
+namespace ServiceItemsPlanningPlugin.Scheduler.Jobs;
 
-    public interface IJob
-    {
-        Task Execute();
-    }
+using System.Threading.Tasks;
+
+public interface IJob
+{
+    Task Execute();
 }

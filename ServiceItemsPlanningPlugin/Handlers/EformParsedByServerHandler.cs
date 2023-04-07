@@ -33,32 +33,31 @@ using Rebus.Handlers;
 using ServiceItemsPlanningPlugin.Infrastructure.Helpers;
 using ServiceItemsPlanningPlugin.Messages;
 
-namespace ServiceItemsPlanningPlugin.Handlers
+namespace ServiceItemsPlanningPlugin.Handlers;
+
+public class EformParsedByServerHandler : IHandleMessages<EformParsedByServer>
 {
-    public class EformParsedByServerHandler : IHandleMessages<EformParsedByServer>
+    private readonly eFormCore.Core _sdkCore;
+    private readonly ItemsPlanningPnDbContext _dbContext;
+
+    public EformParsedByServerHandler(eFormCore.Core sdkCore, DbContextHelper dbContextHelper)
     {
-        private readonly eFormCore.Core _sdkCore;
-        private readonly ItemsPlanningPnDbContext _dbContext;
+        _dbContext = dbContextHelper.GetDbContext();
+        _sdkCore = sdkCore;
+    }
 
-        public EformParsedByServerHandler(eFormCore.Core sdkCore, DbContextHelper dbContextHelper)
+    public async Task Handle(EformParsedByServer message)
+    {
+        await using MicrotingDbContext sdkDbContext = _sdkCore.DbContextHelper.GetDbContext();
+        Case theCase = await sdkDbContext.Cases.FirstOrDefaultAsync(x => x.MicrotingUid == message.CaseId);
+        if (theCase != null)
         {
-            _dbContext = dbContextHelper.GetDbContext();
-            _sdkCore = sdkCore;
-        }
-
-        public async Task Handle(EformParsedByServer message)
-        {
-            await using MicrotingDbContext sdkDbContext = _sdkCore.DbContextHelper.GetDbContext();
-            Case theCase = await sdkDbContext.Cases.FirstOrDefaultAsync(x => x.MicrotingUid == message.CaseId);
-            if (theCase != null)
+            PlanningCaseSite planningCaseSite =
+                await _dbContext.PlanningCaseSites.FirstOrDefaultAsync(x => x.MicrotingSdkCaseId == theCase.Id);
+            if (planningCaseSite is { Status: < 70 })
             {
-                PlanningCaseSite planningCaseSite =
-                    await _dbContext.PlanningCaseSites.FirstOrDefaultAsync(x => x.MicrotingSdkCaseId == theCase.Id);
-                if (planningCaseSite is { Status: < 70 })
-                {
-                    planningCaseSite.Status = 70;
-                    await planningCaseSite.Update(_dbContext);
-                }
+                planningCaseSite.Status = 70;
+                await planningCaseSite.Update(_dbContext);
             }
         }
     }

@@ -30,21 +30,20 @@ using Rebus.Handlers;
 using ServiceItemsPlanningPlugin.Handlers;
 using ServiceItemsPlanningPlugin.Messages;
 
-namespace ServiceItemsPlanningPlugin.Installers
+namespace ServiceItemsPlanningPlugin.Installers;
+
+public class RebusHandlerInstaller : IWindsorInstaller
 {
-    public class RebusHandlerInstaller : IWindsorInstaller
+    public void Install(IWindsorContainer container, IConfigurationStore store)
     {
-        public void Install(IWindsorContainer container, IConfigurationStore store)
-        {
-            container.Register(Component.For<IHandleMessages<ScheduledItemExecuted>>().ImplementedBy<ScheduledItemExecutedHandler>().LifestyleTransient());
-            container.Register(Component.For<IHandleMessages<eFormCompleted>>().ImplementedBy<EFormCompletedHandler>().LifestyleTransient());
-            container.Register(Component.For<IHandleMessages<eFormRetrieved>>().ImplementedBy<EFormRetrievedHandler>().LifestyleTransient());
-            container.Register(Component.For<IHandleMessages<EformParsedByServer>>().ImplementedBy<EformParsedByServerHandler>().LifestyleTransient());
-            container.Register(Component.For<IHandleMessages<EformParsingError>>().ImplementedBy<EformParsingErrorHandler>().LifestyleTransient());
-            container.Register(Component.For<IHandleMessages<PlanningCaseCreate>>().ImplementedBy<ItemCaseCreateHandler>().LifestyleTransient());
-            container.Register(Component.For<IHandleMessages<PlanningCaseSingleCreate>>().ImplementedBy<ItemCaseSingleCreateHandler>().LifestyleTransient());
-            container.Register(Component.For<IHandleMessages<PushMessage>>().ImplementedBy<PushMessageHandler>()
-                .LifestyleTransient());
-        }
+        container.Register(Component.For<IHandleMessages<ScheduledItemExecuted>>().ImplementedBy<ScheduledItemExecutedHandler>().LifestyleTransient());
+        container.Register(Component.For<IHandleMessages<eFormCompleted>>().ImplementedBy<EFormCompletedHandler>().LifestyleTransient());
+        container.Register(Component.For<IHandleMessages<eFormRetrieved>>().ImplementedBy<EFormRetrievedHandler>().LifestyleTransient());
+        container.Register(Component.For<IHandleMessages<EformParsedByServer>>().ImplementedBy<EformParsedByServerHandler>().LifestyleTransient());
+        container.Register(Component.For<IHandleMessages<EformParsingError>>().ImplementedBy<EformParsingErrorHandler>().LifestyleTransient());
+        container.Register(Component.For<IHandleMessages<PlanningCaseCreate>>().ImplementedBy<ItemCaseCreateHandler>().LifestyleTransient());
+        container.Register(Component.For<IHandleMessages<PlanningCaseSingleCreate>>().ImplementedBy<ItemCaseSingleCreateHandler>().LifestyleTransient());
+        container.Register(Component.For<IHandleMessages<PushMessage>>().ImplementedBy<PushMessageHandler>()
+            .LifestyleTransient());
     }
 }

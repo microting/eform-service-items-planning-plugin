@@ -22,62 +22,61 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-namespace ServiceItemsPlanningPlugin.Handlers
+namespace ServiceItemsPlanningPlugin.Handlers;
+
+using System.Linq;
+using System.Threading.Tasks;
+using Infrastructure.Helpers;
+using Messages;
+using Microsoft.EntityFrameworkCore;
+using Microting.ItemsPlanningBase.Infrastructure.Data;
+using Rebus.Bus;
+using Rebus.Handlers;
+using Constants = Microting.eForm.Infrastructure.Constants.Constants;
+using Microting.eFormApi.BasePn.Infrastructure.Helpers;
+
+public class ScheduledItemExecutedHandler : IHandleMessages<ScheduledItemExecuted>
 {
-    using System.Linq;
-    using System.Threading.Tasks;
-    using Infrastructure.Helpers;
-    using Messages;
-    using Microsoft.EntityFrameworkCore;
-    using Microting.ItemsPlanningBase.Infrastructure.Data;
-    using Rebus.Bus;
-    using Rebus.Handlers;
-    using Constants = Microting.eForm.Infrastructure.Constants.Constants;
-    using Microting.eFormApi.BasePn.Infrastructure.Helpers;
+    private readonly ItemsPlanningPnDbContext _dbContext;
+    private readonly IBus _bus;
+    private readonly eFormCore.Core _sdkCore;
 
-    public class ScheduledItemExecutedHandler : IHandleMessages<ScheduledItemExecuted>
+    public ScheduledItemExecutedHandler(
+        DbContextHelper dbContextHelper,
+        IBus bus,
+        eFormCore.Core sdkCore)
     {
-        private readonly ItemsPlanningPnDbContext _dbContext;
-        private readonly IBus _bus;
-        private readonly eFormCore.Core _sdkCore;
+        _dbContext = dbContextHelper.GetDbContext();
+        _bus = bus;
+        _sdkCore = sdkCore;
+    }
 
-        public ScheduledItemExecutedHandler(
-            DbContextHelper dbContextHelper,
-            IBus bus,
-            eFormCore.Core sdkCore)
+    public async Task Handle(ScheduledItemExecuted message)
+    {
+        var planning = await _dbContext.Plannings
+            .Where(x => x.WorkflowState != Constants.WorkflowStates.Removed)
+            .FirstOrDefaultAsync(x => x.Id == message.PlanningId);
+
+        var siteIds = _dbContext.PlanningSites
+            .Where(x => x.WorkflowState != Constants.WorkflowStates.Removed
+                        && x.PlanningId == planning.Id)
+            .Select(x => x.SiteId)
+            .ToList();
+        if (!siteIds.Any())
         {
-            _dbContext = dbContextHelper.GetDbContext();
-            _bus = bus;
-            _sdkCore = sdkCore;
+            Log.LogEvent("ScheduledItemExecutedHandler.Task: SiteIds not set");
+            return;
         }
 
-        public async Task Handle(ScheduledItemExecuted message)
+        Log.LogEvent($"ScheduledItemExecutedHandler.Task: SiteIds {siteIds}");
+
+        if (message.PlanningSiteId.HasValue)
         {
-            var planning = await _dbContext.Plannings
-                .Where(x => x.WorkflowState != Constants.WorkflowStates.Removed)
-                .FirstOrDefaultAsync(x => x.Id == message.PlanningId);
-
-            var siteIds = _dbContext.PlanningSites
-                .Where(x => x.WorkflowState != Constants.WorkflowStates.Removed
-                            && x.PlanningId == planning.Id)
-                .Select(x => x.SiteId)
-                .ToList();
-            if (!siteIds.Any())
-            {
-                Log.LogEvent("ScheduledItemExecutedHandler.Task: SiteIds not set");
-                return;
-            }
-
-            Log.LogEvent($"ScheduledItemExecutedHandler.Task: SiteIds {siteIds}");
-
-            if (message.PlanningSiteId.HasValue)
-            {
-                await _bus.SendLocal(new PlanningCaseSingleCreate(planning.Id, planning.RelatedEFormId, message.PlanningSiteId.Value));
-            }
-            else
-            {
-                await _bus.SendLocal(new PlanningCaseCreate(planning.Id, planning.RelatedEFormId));
-            }
+            await _bus.SendLocal(new PlanningCaseSingleCreate(planning.Id, planning.RelatedEFormId, message.PlanningSiteId.Value));
+        }
+        else
+        {
+            await _bus.SendLocal(new PlanningCaseCreate(planning.Id, planning.RelatedEFormId));
         }
     }
 }

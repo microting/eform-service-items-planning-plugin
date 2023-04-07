@@ -21,17 +21,16 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
-namespace ServiceItemsPlanningPlugin.Messages
-{
-    public class PlanningCaseCreate
-    {
-        public int PlanningId { get; }
-        public int RelatedEFormId { get; set; }
+namespace ServiceItemsPlanningPlugin.Messages;
 
-        public PlanningCaseCreate(int planningId, int relatedEFormId)
-        {
-            PlanningId = planningId;
-            RelatedEFormId = relatedEFormId;
-        }
+public class PlanningCaseCreate
+{
+    public int PlanningId { get; }
+    public int RelatedEFormId { get; set; }
+
+    public PlanningCaseCreate(int planningId, int relatedEFormId)
+    {
+        PlanningId = planningId;
+        RelatedEFormId = relatedEFormId;
     }
 }

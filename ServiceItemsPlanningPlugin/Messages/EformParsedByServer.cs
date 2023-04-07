@@ -24,15 +24,14 @@ SOFTWARE.
 
 using System;
 
-namespace ServiceItemsPlanningPlugin.Messages
-{
-    public class EformParsedByServer
-    {
-        public int CaseId { get; protected set; }
+namespace ServiceItemsPlanningPlugin.Messages;
 
-        public EformParsedByServer(int caseId)
-        {
-            CaseId = caseId;
-        }
+public class EformParsedByServer
+{
+    public int CaseId { get; protected set; }
+
+    public EformParsedByServer(int caseId)
+    {
+        CaseId = caseId;
     }
 }

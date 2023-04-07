@@ -28,198 +28,197 @@ using Microting.eForm.Infrastructure.Data.Entities;
 using Microting.eFormApi.BasePn.Infrastructure.Helpers;
 using Microting.ItemsPlanningBase.Infrastructure.Enums;
 
-namespace ServiceItemsPlanningPlugin.Handlers
+namespace ServiceItemsPlanningPlugin.Handlers;
+
+using System;
+using System.Linq;
+using System.Threading.Tasks;
+using Infrastructure.Helpers;
+using Messages;
+using Microsoft.EntityFrameworkCore;
+using Microting.eForm.Infrastructure.Constants;
+using Microting.ItemsPlanningBase.Infrastructure.Data;
+using Microting.ItemsPlanningBase.Infrastructure.Data.Entities;
+using Rebus.Handlers;
+
+public class ItemCaseCreateHandler : IHandleMessages<PlanningCaseCreate>
 {
-    using System;
-    using System.Linq;
-    using System.Threading.Tasks;
-    using Infrastructure.Helpers;
-    using Messages;
-    using Microsoft.EntityFrameworkCore;
-    using Microting.eForm.Infrastructure.Constants;
-    using Microting.ItemsPlanningBase.Infrastructure.Data;
-    using Microting.ItemsPlanningBase.Infrastructure.Data.Entities;
-    using Rebus.Handlers;
+    private readonly ItemsPlanningPnDbContext _dbContext;
+    private readonly eFormCore.Core _sdkCore;
 
-    public class ItemCaseCreateHandler : IHandleMessages<PlanningCaseCreate>
+    public ItemCaseCreateHandler(eFormCore.Core sdkCore, DbContextHelper dbContextHelper)
     {
-        private readonly ItemsPlanningPnDbContext _dbContext;
-        private readonly eFormCore.Core _sdkCore;
+        _sdkCore = sdkCore;
+        _dbContext = dbContextHelper.GetDbContext();
+    }
 
-        public ItemCaseCreateHandler(eFormCore.Core sdkCore, DbContextHelper dbContextHelper)
+    public async Task Handle(PlanningCaseCreate message)
+    {
+        var planning = await _dbContext.Plannings
+            .Where(x => x.WorkflowState != Constants.WorkflowStates.Removed)
+            .FirstOrDefaultAsync(x => x.Id == message.PlanningId);
+        await using MicrotingDbContext microtingDbContext = _sdkCore.DbContextHelper.GetDbContext();
+        if (planning != null)
         {
-            _sdkCore = sdkCore;
-            _dbContext = dbContextHelper.GetDbContext();
-        }
+            var siteIds = _dbContext.PlanningSites
+                .Where(x => x.WorkflowState != Constants.WorkflowStates.Removed
+                            && x.PlanningId == planning.Id)
+                .Select(x => x.SiteId)
+                .ToList();
 
-        public async Task Handle(PlanningCaseCreate message)
-        {
-            var planning = await _dbContext.Plannings
-                .Where(x => x.WorkflowState != Constants.WorkflowStates.Removed)
-                .FirstOrDefaultAsync(x => x.Id == message.PlanningId);
-            await using MicrotingDbContext microtingDbContext = _sdkCore.DbContextHelper.GetDbContext();
-            if (planning != null)
+            var planningCases = await _dbContext.PlanningCases
+                .Where(x => x.PlanningId == planning.Id
+                            && x.WorkflowState != Constants.WorkflowStates.Retracted
+                            && x.WorkflowState != Constants.WorkflowStates.Removed)
+                .ToListAsync();
+            foreach (PlanningCase cPlanningCase in planningCases)
             {
-                var siteIds = _dbContext.PlanningSites
-                    .Where(x => x.WorkflowState != Constants.WorkflowStates.Removed
-                                && x.PlanningId == planning.Id)
-                    .Select(x => x.SiteId)
-                    .ToList();
+                cPlanningCase.WorkflowState = Constants.WorkflowStates.Retracted;
+                await cPlanningCase.Update(_dbContext);
+            }
 
-                var planningCases = await _dbContext.PlanningCases
-                    .Where(x => x.PlanningId == planning.Id
-                                && x.WorkflowState != Constants.WorkflowStates.Retracted
-                                && x.WorkflowState != Constants.WorkflowStates.Removed)
-                    .ToListAsync();
-                foreach (PlanningCase cPlanningCase in planningCases)
+            PlanningCase planningCase = new PlanningCase()
+            {
+                PlanningId = planning.Id,
+                Status = 66,
+                MicrotingSdkeFormId = message.RelatedEFormId
+            };
+            await planningCase.Create(_dbContext);
+
+            foreach (var siteId in siteIds)
+            {
+                var casesToDelete = await _dbContext.PlanningCaseSites.
+                    Where(x => x.PlanningId == planning.Id
+                               && x.MicrotingSdkSiteId == siteId
+                               && x.WorkflowState != Constants.WorkflowStates.Retracted).ToListAsync();
+                Log.LogEvent($"ItemCaseCreateHandler.Task: Found {casesToDelete.Count} PlanningCaseSites, which has not yet been retracted, so retracting now.");
+
+                foreach (var caseToDelete in casesToDelete)
                 {
-                    cPlanningCase.WorkflowState = Constants.WorkflowStates.Retracted;
-                    await cPlanningCase.Update(_dbContext);
+                    Log.LogEvent($"ItemCaseCreateHandler.Task: Trying to retract the case with Id: {caseToDelete.Id}");
+                    var sdkCase = await microtingDbContext.Cases.FirstOrDefaultAsync(x => x.Id == caseToDelete.MicrotingSdkCaseId);
+                    if (sdkCase is { MicrotingUid: { } })
+                    {
+                        await _sdkCore.CaseDelete((int)sdkCase.MicrotingUid);
+                    }
+                    //var caseDto = await _sdkCore.CaseLookupCaseId(caseToDelete.MicrotingSdkCaseId);
+                    //if (caseDto.MicrotingUId != null) await _sdkCore.CaseDelete((int) caseDto.MicrotingUId);
+                    caseToDelete.WorkflowState = Constants.WorkflowStates.Retracted;
+                    await caseToDelete.Update(_dbContext);
                 }
 
-                PlanningCase planningCase = new PlanningCase()
+                Site sdkSite = await microtingDbContext.Sites.FirstAsync(x => x.Id == siteId);
+                Language language = await microtingDbContext.Languages.FirstAsync(x => x.Id == sdkSite.LanguageId);
+                CultureInfo ci = new CultureInfo(language.LanguageCode);
+                var mainElement = await _sdkCore.ReadeForm(message.RelatedEFormId, language);
+                var translation = _dbContext.PlanningNameTranslation
+                    .First(x => x.LanguageId == language.Id && x.PlanningId == planning.Id).Name;
+                var folderId = microtingDbContext.Folders.First(x => x.Id == planning.SdkFolderId).MicrotingUid.ToString();
+
+                mainElement.Label = string.IsNullOrEmpty(planning.PlanningNumber) ? "" : planning.PlanningNumber;
+                mainElement.StartDate = DateTime.Now.ToUniversalTime();
+                if (!string.IsNullOrEmpty(translation))
                 {
-                    PlanningId = planning.Id,
-                    Status = 66,
-                    MicrotingSdkeFormId = message.RelatedEFormId
-                };
-                await planningCase.Create(_dbContext);
+                    mainElement.Label += string.IsNullOrEmpty(mainElement.Label) ? $"{translation}" : $" - {translation}";
+                }
 
-                foreach (var siteId in siteIds)
+                if (!string.IsNullOrEmpty(planning.BuildYear))
                 {
-                    var casesToDelete = await _dbContext.PlanningCaseSites.
-                        Where(x => x.PlanningId == planning.Id
-                                   && x.MicrotingSdkSiteId == siteId
-                                   && x.WorkflowState != Constants.WorkflowStates.Retracted).ToListAsync();
-                    Log.LogEvent($"ItemCaseCreateHandler.Task: Found {casesToDelete.Count} PlanningCaseSites, which has not yet been retracted, so retracting now.");
+                    mainElement.Label += string.IsNullOrEmpty(mainElement.Label) ? $"{planning.BuildYear}" : $" - {planning.BuildYear}";
+                }
 
-                    foreach (var caseToDelete in casesToDelete)
+                if (!string.IsNullOrEmpty(planning.Type))
+                {
+                    mainElement.Label += string.IsNullOrEmpty(mainElement.Label) ? $"{planning.Type}" : $" - {planning.Type}";
+                }
+
+                if (planning.RepeatType == RepeatType.Day && planning.RepeatEvery == 1)
+                {
+                    mainElement.Label = $"{mainElement.StartDate.ToString("dddd dd. MMM yyyy", ci)} - {mainElement.Label}";
+                }
+
+                if (mainElement.ElementList.Count == 1)
+                {
+                    mainElement.ElementList[0].Label = mainElement.Label;
+                }
+                mainElement.CheckListFolderName = folderId;
+                // mainElement.EndDate = DateTime.Now.AddYears(10).ToUniversalTime();
+                mainElement.EndDate = (DateTime) planning.NextExecutionTime;
+
+                var planningCaseSite =
+                    await _dbContext.PlanningCaseSites.FirstOrDefaultAsync(x => x.PlanningCaseId == planningCase.Id && x.MicrotingSdkSiteId == siteId);
+
+                if (planningCaseSite == null)
+                {
+                    planningCaseSite = new PlanningCaseSite()
                     {
-                        Log.LogEvent($"ItemCaseCreateHandler.Task: Trying to retract the case with Id: {caseToDelete.Id}");
-                        var sdkCase = await microtingDbContext.Cases.FirstOrDefaultAsync(x => x.Id == caseToDelete.MicrotingSdkCaseId);
-                        if (sdkCase is { MicrotingUid: { } })
+                        MicrotingSdkSiteId = siteId,
+                        MicrotingSdkeFormId = message.RelatedEFormId,
+                        Status = 66,
+                        PlanningId = planning.Id,
+                        PlanningCaseId = planningCase.Id
+                    };
+
+                    await planningCaseSite.Create(_dbContext);
+                }
+
+                if (planningCaseSite.MicrotingSdkCaseDoneAt.HasValue)
+                {
+                    long unixTimestamp = (long)planningCaseSite.MicrotingSdkCaseDoneAt.Value
+                        .Subtract(new DateTime(1970, 1, 1))
+                        .TotalSeconds;
+
+                    mainElement.ElementList[0].Description.InderValue = unixTimestamp.ToString();
+                }
+
+                if (planningCaseSite.MicrotingSdkCaseId >= 1) continue;
+                if (planning.PushMessageOnDeployment)
+                {
+                    if (planning.RepeatType == RepeatType.Day && planning.RepeatEvery < 2)
+                    { }
+                    else
+                    {
+                        var folder = await GetTopFolderName((int) planning.SdkFolderId, microtingDbContext);
+                        string body = "";
+                        if (folder != null)
                         {
-                            await _sdkCore.CaseDelete((int)sdkCase.MicrotingUid);
-                        }
-                        //var caseDto = await _sdkCore.CaseLookupCaseId(caseToDelete.MicrotingSdkCaseId);
-                        //if (caseDto.MicrotingUId != null) await _sdkCore.CaseDelete((int) caseDto.MicrotingUId);
-                        caseToDelete.WorkflowState = Constants.WorkflowStates.Retracted;
-                        await caseToDelete.Update(_dbContext);
-                    }
-
-                    Site sdkSite = await microtingDbContext.Sites.FirstAsync(x => x.Id == siteId);
-                    Language language = await microtingDbContext.Languages.FirstAsync(x => x.Id == sdkSite.LanguageId);
-                    CultureInfo ci = new CultureInfo(language.LanguageCode);
-                    var mainElement = await _sdkCore.ReadeForm(message.RelatedEFormId, language);
-                    var translation = _dbContext.PlanningNameTranslation
-                        .First(x => x.LanguageId == language.Id && x.PlanningId == planning.Id).Name;
-                    var folderId = microtingDbContext.Folders.First(x => x.Id == planning.SdkFolderId).MicrotingUid.ToString();
-
-                    mainElement.Label = string.IsNullOrEmpty(planning.PlanningNumber) ? "" : planning.PlanningNumber;
-                    mainElement.StartDate = DateTime.Now.ToUniversalTime();
-                    if (!string.IsNullOrEmpty(translation))
-                    {
-                        mainElement.Label += string.IsNullOrEmpty(mainElement.Label) ? $"{translation}" : $" - {translation}";
-                    }
-
-                    if (!string.IsNullOrEmpty(planning.BuildYear))
-                    {
-                        mainElement.Label += string.IsNullOrEmpty(mainElement.Label) ? $"{planning.BuildYear}" : $" - {planning.BuildYear}";
-                    }
-
-                    if (!string.IsNullOrEmpty(planning.Type))
-                    {
-                        mainElement.Label += string.IsNullOrEmpty(mainElement.Label) ? $"{planning.Type}" : $" - {planning.Type}";
-                    }
-
-                    if (planning.RepeatType == RepeatType.Day && planning.RepeatEvery == 1)
-                    {
-                        mainElement.Label = $"{mainElement.StartDate.ToString("dddd dd. MMM yyyy", ci)} - {mainElement.Label}";
-                    }
-
-                    if (mainElement.ElementList.Count == 1)
-                    {
-                        mainElement.ElementList[0].Label = mainElement.Label;
-                    }
-                    mainElement.CheckListFolderName = folderId;
-                    // mainElement.EndDate = DateTime.Now.AddYears(10).ToUniversalTime();
-                    mainElement.EndDate = (DateTime) planning.NextExecutionTime;
-
-                    var planningCaseSite =
-                        await _dbContext.PlanningCaseSites.FirstOrDefaultAsync(x => x.PlanningCaseId == planningCase.Id && x.MicrotingSdkSiteId == siteId);
-
-                    if (planningCaseSite == null)
-                    {
-                        planningCaseSite = new PlanningCaseSite()
-                        {
-                            MicrotingSdkSiteId = siteId,
-                            MicrotingSdkeFormId = message.RelatedEFormId,
-                            Status = 66,
-                            PlanningId = planning.Id,
-                            PlanningCaseId = planningCase.Id
-                        };
-
-                        await planningCaseSite.Create(_dbContext);
-                    }
-
-                    if (planningCaseSite.MicrotingSdkCaseDoneAt.HasValue)
-                    {
-                        long unixTimestamp = (long)planningCaseSite.MicrotingSdkCaseDoneAt.Value
-                            .Subtract(new DateTime(1970, 1, 1))
-                            .TotalSeconds;
-
-                        mainElement.ElementList[0].Description.InderValue = unixTimestamp.ToString();
-                    }
-
-                    if (planningCaseSite.MicrotingSdkCaseId >= 1) continue;
-                    if (planning.PushMessageOnDeployment)
-                    {
-                        if (planning.RepeatType == RepeatType.Day && planning.RepeatEvery < 2)
-                        { }
-                        else
-                        {
-                            var folder = await GetTopFolderName((int) planning.SdkFolderId, microtingDbContext);
-                            string body = "";
-                            if (folder != null)
-                            {
-                                planning.SdkFolderId = microtingDbContext.Folders
-                                    .FirstOrDefault(y => y.Id == planning.SdkFolderId).Id;
-                                FolderTranslation folderTranslation =
-                                    await microtingDbContext.FolderTranslations.FirstOrDefaultAsync(x =>
-                                        x.FolderId == folder.Id && x.LanguageId == sdkSite.LanguageId);
-                                body = $"{folderTranslation.Name} ({sdkSite.Name};{DateTime.Now:dd.MM.yyyy})";
-                            }
-
-                            PlanningNameTranslation planningNameTranslation =
-                                await _dbContext.PlanningNameTranslation.FirstOrDefaultAsync(x =>
-                                    x.PlanningId == planning.Id
-                                    && x.LanguageId == sdkSite.LanguageId);
-
-                            mainElement.PushMessageBody = body;
-                            mainElement.PushMessageTitle = planningNameTranslation.Name;
+                            planning.SdkFolderId = microtingDbContext.Folders
+                                .FirstOrDefault(y => y.Id == planning.SdkFolderId).Id;
+                            FolderTranslation folderTranslation =
+                                await microtingDbContext.FolderTranslations.FirstOrDefaultAsync(x =>
+                                    x.FolderId == folder.Id && x.LanguageId == sdkSite.LanguageId);
+                            body = $"{folderTranslation.Name} ({sdkSite.Name};{DateTime.Now:dd.MM.yyyy})";
                         }
 
-                    }
-                    var caseId = await _sdkCore.CaseCreate(mainElement, "", (int)sdkSite.MicrotingUid, null);
+                        PlanningNameTranslation planningNameTranslation =
+                            await _dbContext.PlanningNameTranslation.FirstOrDefaultAsync(x =>
+                                x.PlanningId == planning.Id
+                                && x.LanguageId == sdkSite.LanguageId);
 
-                    if (caseId != null)
-                    {
-                        var caseDto = await _sdkCore.CaseLookupMUId((int) caseId);
-                        if (caseDto?.CaseId != null) planningCaseSite.MicrotingSdkCaseId = (int) caseDto.CaseId;
-                        await planningCaseSite.Update(_dbContext);
+                        mainElement.PushMessageBody = body;
+                        mainElement.PushMessageTitle = planningNameTranslation.Name;
                     }
+
+                }
+                var caseId = await _sdkCore.CaseCreate(mainElement, "", (int)sdkSite.MicrotingUid, null);
+
+                if (caseId != null)
+                {
+                    var caseDto = await _sdkCore.CaseLookupMUId((int) caseId);
+                    if (caseDto?.CaseId != null) planningCaseSite.MicrotingSdkCaseId = (int) caseDto.CaseId;
+                    await planningCaseSite.Update(_dbContext);
                 }
             }
         }
+    }
 
-        private async Task<Folder> GetTopFolderName(int folderId, MicrotingDbContext dbContext)
+    private async Task<Folder> GetTopFolderName(int folderId, MicrotingDbContext dbContext)
+    {
+        var result = await dbContext.Folders.FirstAsync(y => y.Id == folderId);
+        if (result.ParentId != null)
         {
-            var result = await dbContext.Folders.FirstAsync(y => y.Id == folderId);
-            if (result.ParentId != null)
-            {
-                result = await GetTopFolderName((int)result.ParentId, dbContext);
-            }
-            return result;
+            result = await GetTopFolderName((int)result.ParentId, dbContext);
         }
+        return result;
     }
 }

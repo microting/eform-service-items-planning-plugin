@@ -21,19 +21,18 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
-namespace ServiceItemsPlanningPlugin.Messages
-{
-    public class eFormCompleted
-    {
-        public int? caseId { get; protected set; }
-        public int? MicrotingUId { get; protected set; }
-        public int? CheckId { get; protected set; }
+namespace ServiceItemsPlanningPlugin.Messages;
 
-        public eFormCompleted(int? caseId, int? MicrotingUId, int? checkId)
-        {
-            this.caseId = caseId;
-            this.MicrotingUId = MicrotingUId;
-            this.CheckId = checkId;
-        }
+public class eFormCompleted
+{
+    public int? caseId { get; protected set; }
+    public int? MicrotingUId { get; protected set; }
+    public int? CheckId { get; protected set; }
+
+    public eFormCompleted(int? caseId, int? MicrotingUId, int? checkId)
+    {
+        this.caseId = caseId;
+        this.MicrotingUId = MicrotingUId;
+        this.CheckId = checkId;
     }
 }

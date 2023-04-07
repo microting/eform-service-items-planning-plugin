@@ -22,24 +22,23 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-namespace ServiceItemsPlanningPlugin.Scheduler
-{
-    using System;
-    using System.Collections.Generic;
-    using System.Threading;
-    using Jobs;
+namespace ServiceItemsPlanningPlugin.Scheduler;
 
-    public class SchedulerService
+using System;
+using System.Collections.Generic;
+using System.Threading;
+using Jobs;
+
+public class SchedulerService
+{
+    private readonly List<Timer> _timers = new List<Timer>();
+    public void ScheduleTask(double interval, IJob job)
     {
-        private readonly List<Timer> _timers = new List<Timer>();
-        public void ScheduleTask(double interval, IJob job)
+        var timer = new Timer(x =>
         {
-            var timer = new Timer(x =>
-            {
-                Console.WriteLine("SchedulerService.Time got called");
-                job.Execute();
-            }, null, TimeSpan.Zero, TimeSpan.FromMinutes(interval));
-            _timers.Add(timer);
-        }
+            Console.WriteLine("SchedulerService.Time got called");
+            job.Execute();
+        }, null, TimeSpan.Zero, TimeSpan.FromMinutes(interval));
+        _timers.Add(timer);
     }
 }

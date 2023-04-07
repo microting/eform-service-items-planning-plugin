@@ -22,17 +22,16 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-namespace ServiceItemsPlanningPlugin.Messages
-{
-    public class ScheduledItemExecuted
-    {
-        public int PlanningId { get; }
-        public int? PlanningSiteId { get; }
+namespace ServiceItemsPlanningPlugin.Messages;
 
-        public ScheduledItemExecuted(int planningId, int? planningSiteId = null)
-        {
-            PlanningId = planningId;
-            PlanningSiteId = planningSiteId;
-        }
+public class ScheduledItemExecuted
+{
+    public int PlanningId { get; }
+    public int? PlanningSiteId { get; }
+
+    public ScheduledItemExecuted(int planningId, int? planningSiteId = null)
+    {
+        PlanningId = planningId;
+        PlanningSiteId = planningSiteId;
     }
 }
