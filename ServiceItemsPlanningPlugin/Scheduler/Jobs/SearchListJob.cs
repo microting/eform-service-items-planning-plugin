@@ -315,6 +315,9 @@ public class SearchListJob : IJob
                 planning.LastExecutedTime = new DateTime(now.Year, now.Month, now.Day, 0, 0, 0);
                 planning.DoneInPeriod = false;
                 planning.PushMessageSent = false;
+
+                planning.NextExecutionTime ??= planning.LastExecutedTime;
+
                 if (planning.RepeatType == RepeatType.Day)
                 {
                     if (planning.RepeatEvery != 0)
