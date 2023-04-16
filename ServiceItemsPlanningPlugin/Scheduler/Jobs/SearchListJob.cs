@@ -266,7 +266,8 @@ public class SearchListJob : IJob
             //                          12 * (now.Year - x.LastExecutedTime.Value.Year) >= x.RepeatEvery))));
 
             var planningsForExecution = await baseQuery
-                .Where(x =>x.NextExecutionTime <= now)
+                .Where(x => x.NextExecutionTime <= now || x.NextExecutionTime == null)
+                .Where(x => x.StartDate <= now)
                 .Where(x => x.RepeatEvery != 0 && x.RepeatType != RepeatType.Day)
                 .ToListAsync();
 
@@ -316,7 +317,7 @@ public class SearchListJob : IJob
                 planning.DoneInPeriod = false;
                 planning.PushMessageSent = false;
 
-                planning.NextExecutionTime ??= planning.LastExecutedTime;
+                planning.NextExecutionTime ??= new DateTime(planning.StartDate.Year, planning.StartDate.Month, planning.StartDate.Day, 0, 0, 0);
 
                 if (planning.RepeatType == RepeatType.Day)
                 {
