@@ -317,7 +317,7 @@ public class SearchListJob : IJob
                 planning.DoneInPeriod = false;
                 planning.PushMessageSent = false;
 
-                planning.NextExecutionTime ??= planning.LastExecutedTime;
+                planning.NextExecutionTime ??= new DateTime(planning.StartDate.Year, planning.StartDate.Month, planning.StartDate.Day, 0, 0, 0);
 
                 if (planning.RepeatType == RepeatType.Day)
                 {
