@@ -196,7 +196,7 @@ public class Core : ISdkEventHandler
 
             _coreAvailable = false;
 
-            _sdkCore.Close();
+            _sdkCore.Close().GetAwaiter().GetResult();
 
             _coreStatChanging = false;
         }
