@@ -23,10 +23,12 @@ SOFTWARE.
 */
 
 using System.Globalization;
+using System.Threading;
 using Microting.eForm.Infrastructure;
 using Microting.eForm.Infrastructure.Data.Entities;
 using Microting.eFormApi.BasePn.Infrastructure.Helpers;
 using Microting.ItemsPlanningBase.Infrastructure.Enums;
+using ServiceBackendConfigurationPlugin.Resources;
 
 namespace ServiceItemsPlanningPlugin.Handlers;
 
@@ -145,6 +147,29 @@ public class ItemCaseCreateHandler : IHandleMessages<PlanningCaseCreate>
                 // mainElement.EndDate = DateTime.Now.AddYears(10).ToUniversalTime();
                 mainElement.EndDate = (DateTime) planning.NextExecutionTime;
 
+                if (planning.ShowExpireDate)
+                {
+                    if (planning.NextExecutionTime != null)
+                    {
+                        DateTime beginningOfTime = new DateTime(2020, 1, 1);
+                        mainElement.DisplayOrder = ((DateTime)planning.NextExecutionTime - beginningOfTime).Days;
+                        Thread.CurrentThread.CurrentCulture = CultureInfo.GetCultureInfo(language.LanguageCode);
+                        Thread.CurrentThread.CurrentUICulture = CultureInfo.GetCultureInfo(language.LanguageCode);
+
+                        if (string.IsNullOrEmpty(mainElement.ElementList[0].Description.InderValue))
+                        {
+                            mainElement.ElementList[0].Description.InderValue =
+                                $"<strong>{Translations.Deadline}: {((DateTime)planning.NextExecutionTime).AddDays(-1).ToString("dd.MM.yyyy")}</strong>";
+                        }
+                        else
+                        {
+                            mainElement.ElementList[0].Description.InderValue +=
+                                $"<br><strong>{Translations.Deadline}: {((DateTime)planning.NextExecutionTime).AddDays(-1).ToString("dd.MM.yyyy")}</strong>";
+                        }
+                    }
+                }
+
+
                 var planningCaseSite =
                     await _dbContext.PlanningCaseSites.FirstOrDefaultAsync(x => x.PlanningCaseId == planningCase.Id && x.MicrotingSdkSiteId == siteId);
 
@@ -200,13 +225,17 @@ public class ItemCaseCreateHandler : IHandleMessages<PlanningCaseCreate>
                     }
 
                 }
-                var caseId = await _sdkCore.CaseCreate(mainElement, "", (int)sdkSite.MicrotingUid, null);
 
-                if (caseId != null)
+                if (mainElement.EndDate > DateTime.UtcNow)
                 {
-                    var caseDto = await _sdkCore.CaseLookupMUId((int) caseId);
-                    if (caseDto?.CaseId != null) planningCaseSite.MicrotingSdkCaseId = (int) caseDto.CaseId;
-                    await planningCaseSite.Update(_dbContext);
+                    var caseId = await _sdkCore.CaseCreate(mainElement, "", (int) sdkSite.MicrotingUid, null);
+
+                    if (caseId != null)
+                    {
+                        var caseDto = await _sdkCore.CaseLookupMUId((int) caseId);
+                        if (caseDto?.CaseId != null) planningCaseSite.MicrotingSdkCaseId = (int) caseDto.CaseId;
+                        await planningCaseSite.Update(_dbContext);
+                    }
                 }
             }
         }
