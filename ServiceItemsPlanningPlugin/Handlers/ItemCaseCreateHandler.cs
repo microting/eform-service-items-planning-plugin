@@ -197,34 +197,34 @@ public class ItemCaseCreateHandler : IHandleMessages<PlanningCaseCreate>
                 }
 
                 if (planningCaseSite.MicrotingSdkCaseId >= 1) continue;
-                if (planning.PushMessageOnDeployment)
+                // if (planning.PushMessageOnDeployment)
+                // {
+                //     if (planning.RepeatType == RepeatType.Day && planning.RepeatEvery < 2)
+                //     { }
+                //     else
+                //     {
+                var folder = await GetTopFolderName((int) planning.SdkFolderId, microtingDbContext);
+                string body = "";
+                if (folder != null)
                 {
-                    if (planning.RepeatType == RepeatType.Day && planning.RepeatEvery < 2)
-                    { }
-                    else
-                    {
-                        var folder = await GetTopFolderName((int) planning.SdkFolderId, microtingDbContext);
-                        string body = "";
-                        if (folder != null)
-                        {
-                            planning.SdkFolderId = microtingDbContext.Folders
-                                .FirstOrDefault(y => y.Id == planning.SdkFolderId).Id;
-                            FolderTranslation folderTranslation =
-                                await microtingDbContext.FolderTranslations.FirstOrDefaultAsync(x =>
-                                    x.FolderId == folder.Id && x.LanguageId == sdkSite.LanguageId);
-                            body = $"{folderTranslation.Name} ({sdkSite.Name};{DateTime.Now:dd.MM.yyyy})";
-                        }
-
-                        PlanningNameTranslation planningNameTranslation =
-                            await _dbContext.PlanningNameTranslation.FirstOrDefaultAsync(x =>
-                                x.PlanningId == planning.Id
-                                && x.LanguageId == sdkSite.LanguageId);
-
-                        mainElement.PushMessageBody = body;
-                        mainElement.PushMessageTitle = planningNameTranslation.Name;
-                    }
-
+                    planning.SdkFolderId = microtingDbContext.Folders
+                        .FirstOrDefault(y => y.Id == planning.SdkFolderId).Id;
+                    FolderTranslation folderTranslation =
+                        await microtingDbContext.FolderTranslations.FirstOrDefaultAsync(x =>
+                            x.FolderId == folder.Id && x.LanguageId == sdkSite.LanguageId);
+                    body = $"{folderTranslation.Name} ({sdkSite.Name};{DateTime.Now:dd.MM.yyyy})";
                 }
+
+                PlanningNameTranslation planningNameTranslation =
+                    await _dbContext.PlanningNameTranslation.FirstOrDefaultAsync(x =>
+                        x.PlanningId == planning.Id
+                        && x.LanguageId == sdkSite.LanguageId);
+
+                mainElement.PushMessageBody = body;
+                mainElement.PushMessageTitle = planningNameTranslation.Name;
+                //     }
+                //
+                // }
 
                 if (mainElement.EndDate > DateTime.UtcNow)
                 {
