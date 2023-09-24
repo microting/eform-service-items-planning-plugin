@@ -269,6 +269,7 @@ public class SearchListJob : IJob
                 .Where(x => x.NextExecutionTime <= now || x.NextExecutionTime == null)
                 .Where(x => x.StartDate <= now)
                 .Where(x => x.RepeatEvery != 0 && x.RepeatType != RepeatType.Day)
+                .Where(x => x.Enabled)
                 .ToListAsync();
 
 //            Console.WriteLine($"Daily lists query: {dailyListsQuery.ToSql()}");
