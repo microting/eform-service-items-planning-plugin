@@ -134,8 +134,6 @@ public class SearchListJob : IJob
 
             var planningForCorrectingNextExecutionTime = await baseQuery
                 .Where(x => x.NextExecutionTime != null)
-                .Where(x => x.RepeatType != RepeatType.Day)
-                .Where(x => x.RepeatEvery != 0)
                 .Where(x => x.StartDate > now)
                 .Where(x => x.Enabled)
                 .ToListAsync();
