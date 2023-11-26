@@ -22,6 +22,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+using Sentry;
+
 namespace ServiceItemsPlanningPlugin.Scheduler.Jobs;
 
 using System;
@@ -67,6 +69,7 @@ public class SearchListJob : IJob
     {
         await ExecuteDeploy();
         await ExecutePush();
+        await ExecuteCleanUp();
     }
 
     private async Task ExecutePush()
@@ -132,18 +135,6 @@ public class SearchListJob : IJob
             var baseQuery = _dbContext.Plannings
                 .Where(x => x.WorkflowState != Constants.WorkflowStates.Removed);
 
-            var planningForCorrectingNextExecutionTime = await baseQuery
-                .Where(x => x.NextExecutionTime != null)
-                .Where(x => x.StartDate > now)
-                .Where(x => x.Enabled)
-                .ToListAsync();
-
-            foreach (var planning in planningForCorrectingNextExecutionTime)
-            {
-                planning.NextExecutionTime = null;
-                await planning.Update(_dbContext);
-            }
-
             var planningsForExecution = await baseQuery
                 .Where(x => x.NextExecutionTime <= now || x.NextExecutionTime == null)
                 .Where(x => x.StartDate <= now)
@@ -207,28 +198,53 @@ public class SearchListJob : IJob
 
                 Log.LogEvent($"SearchListJob.Task: Planning {planning.Id} executed");
             }
+        }
+    }
 
-            // new plannings
-            // foreach (var newPlanningSite in newPlanningSites)
-            // {
-            //     if (scheduledItemPlannings.All(x => x.Id != newPlanningSite.Id))
-            //     {
-            //         foreach (var planningSite in newPlanningSite.PlanningSites)
-            //         {
-            //             if (planningSite.LastExecutedTime == null)
-            //             {
-            //                 planningSite.LastExecutedTime = new DateTime(now.Year, now.Month, now.Day, 0, 0, 0);;
-            //                 await planningSite.Update(_dbContext);
-            //
-            //                 await _bus.SendLocal(new ScheduledItemExecuted(newPlanningSite.Id,
-            //                     planningSite.SiteId));
-            //                 //var newPlanningSiteName = translatedName.SingleOrDefault(x => x.PlanningId == newPlanningSite.Id)?.Name;
-            //                 Log.LogEvent(
-            //                     $"SearchListJob.Task: Planning {planningSite.PlanningId} executed with PlanningSite {planningSite.SiteId}");
-            //             }
-            //         }
-            //     }
-            // }
+    private async Task ExecuteCleanUp()
+    {
+        try
+        {
+            var now = DateTime.UtcNow;
+            now = new DateTime(now.Year, now.Month, now.Day, 0, 0, 0);
+            var baseQuery = _dbContext.Plannings
+                .Where(x => x.WorkflowState != Constants.WorkflowStates.Removed);
+
+            var planningForCorrectingNextExecutionTime = await baseQuery
+                .Where(x => x.NextExecutionTime != null)
+                .Where(x => x.StartDate > now)
+                .Where(x => x.Enabled)
+                .ToListAsync();
+
+            foreach (var planning in planningForCorrectingNextExecutionTime)
+            {
+                SentrySdk.CaptureMessage($"Setting NextExecutionTime to null for planning.Id {planning.Id}");
+                Console.WriteLine($"Setting NextExecutionTime to null for planning.Id {planning.Id}");
+                planning.NextExecutionTime = null;
+                await planning.Update(_dbContext);
+            }
+
+            planningForCorrectingNextExecutionTime = await baseQuery
+                .Where(x => x.NextExecutionTime != null)
+                .Where(x => x.StartDate <= now)
+                .Where(x => x.LastExecutedTime == null)
+                .Where(x => x.Enabled)
+                .ToListAsync();
+
+            foreach (var planning in planningForCorrectingNextExecutionTime)
+            {
+                SentrySdk.CaptureMessage(
+                    $"Setting NextExecutionTime to null for planning.Id {planning.Id} since LastExecutedTime is null");
+                Console.WriteLine(
+                    $"Setting NextExecutionTime to null for planning.Id {planning.Id} since LastExecutedTime is null");
+                planning.NextExecutionTime = null;
+                await planning.Update(_dbContext);
+            }
+        }
+        catch (Exception ex)
+        {
+            Log.LogException(ex.Message);
+            Log.LogException(ex.StackTrace);
         }
     }
 }
