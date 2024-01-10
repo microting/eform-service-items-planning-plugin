@@ -138,7 +138,6 @@ public class SearchListJob : IJob
             var planningsForExecution = await baseQuery
                 .Where(x => x.NextExecutionTime <= now || x.NextExecutionTime == null)
                 .Where(x => x.StartDate <= now)
-                .Where(x => x.RepeatEvery != 0 && x.RepeatType != RepeatType.Day)
                 .Where(x => x.Enabled)
                 .ToListAsync();
 
@@ -151,6 +150,11 @@ public class SearchListJob : IJob
 
             foreach (var planning in scheduledItemPlannings)
             {
+                if (planning.RepeatType == RepeatType.Day && planning.RepeatEvery == 0)
+                {
+                    continue;
+                }
+
                 planning.LastExecutedTime = new DateTime(now.Year, now.Month, now.Day, 0, 0, 0);
                 planning.DoneInPeriod = false;
                 planning.PushMessageSent = false;
