@@ -113,8 +113,14 @@ public class ItemCaseCreateHandler : IHandleMessages<PlanningCaseCreate>
                 Language language = await microtingDbContext.Languages.FirstAsync(x => x.Id == sdkSite.LanguageId);
                 CultureInfo ci = new CultureInfo(language.LanguageCode);
                 var mainElement = await _sdkCore.ReadeForm(message.RelatedEFormId, language);
-                var translation = _dbContext.PlanningNameTranslation
-                    .First(x => x.LanguageId == language.Id && x.PlanningId == planning.Id).Name;
+                var planningNameTranslation = _dbContext.PlanningNameTranslation
+                    .FirstOrDefault(x => x.LanguageId == language.Id && x.PlanningId == planning.Id);
+                if (planningNameTranslation == null)
+                {
+                    Console.WriteLine("planningNameTranslation is null");
+                    continue;
+                }
+                var translation = planningNameTranslation?.Name;
                 var folderId = microtingDbContext.Folders.First(x => x.Id == planning.SdkFolderId).MicrotingUid.ToString();
 
                 mainElement.Label = string.IsNullOrEmpty(planning.PlanningNumber) ? "" : planning.PlanningNumber;
@@ -215,10 +221,10 @@ public class ItemCaseCreateHandler : IHandleMessages<PlanningCaseCreate>
                     body = $"{folderTranslation.Name} ({sdkSite.Name};{DateTime.Now:dd.MM.yyyy})";
                 }
 
-                PlanningNameTranslation planningNameTranslation =
-                    await _dbContext.PlanningNameTranslation.FirstOrDefaultAsync(x =>
-                        x.PlanningId == planning.Id
-                        && x.LanguageId == sdkSite.LanguageId);
+                // PlanningNameTranslation planningNameTranslation =
+                //     await _dbContext.PlanningNameTranslation.FirstOrDefaultAsync(x =>
+                //         x.PlanningId == planning.Id
+                //         && x.LanguageId == sdkSite.LanguageId);
 
                 mainElement.PushMessageBody = body;
                 mainElement.PushMessageTitle = planningNameTranslation.Name;
