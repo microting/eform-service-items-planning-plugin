@@ -96,7 +96,7 @@ public class SearchListJob : IJob
 
             foreach (Planning planning in pushReadyPlannings)
             {
-                if ((((DateTime)planning.NextExecutionTime!).Date - now.Date).Days ==
+                if ((((DateTime)planning.NextExecutionTime!).AddDays(-1).Date - now.Date).Days ==
                     planning.DaysBeforeRedeploymentPushMessage)
                 {
                     await _bus.SendLocal(new PushMessage(planning.Id));
