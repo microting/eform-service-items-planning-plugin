@@ -173,8 +173,8 @@ public class ItemCaseCreateHandler : IHandleMessages<PlanningCaseCreate>
                                 $"<br><strong>{Translations.Deadline}: {((DateTime)planning.NextExecutionTime).AddDays(-1).ToString("dd.MM.yyyy")}</strong>";
                         }
                     }
+                    mainElement.DisplayOrder =  (int)(planning.NextExecutionTime!.Value - new DateTime(2022, 12, 5)).TotalDays;
                 }
-
 
                 var planningCaseSite =
                     await _dbContext.PlanningCaseSites.FirstOrDefaultAsync(x => x.PlanningCaseId == planningCase.Id && x.MicrotingSdkSiteId == siteId);
