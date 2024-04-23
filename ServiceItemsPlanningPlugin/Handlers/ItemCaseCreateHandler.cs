@@ -66,6 +66,7 @@ public class ItemCaseCreateHandler : IHandleMessages<PlanningCaseCreate>
                 .Where(x => x.WorkflowState != Constants.WorkflowStates.Removed
                             && x.PlanningId == planning.Id)
                 .Select(x => x.SiteId)
+                .Distinct()
                 .ToList();
 
             var planningCases = await _dbContext.PlanningCases
