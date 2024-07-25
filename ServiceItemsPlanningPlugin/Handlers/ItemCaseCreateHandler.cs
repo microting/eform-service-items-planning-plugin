@@ -166,12 +166,12 @@ public class ItemCaseCreateHandler : IHandleMessages<PlanningCaseCreate>
                         if (string.IsNullOrEmpty(mainElement.ElementList[0].Description.InderValue))
                         {
                             mainElement.ElementList[0].Description.InderValue =
-                                $"<strong>{Translations.Deadline}: {((DateTime)planning.NextExecutionTime).AddDays(-1).ToString("dd.MM.yyyy")}</strong>";
+                                $"<strong>{SharedResource.Deadline}: {((DateTime)planning.NextExecutionTime).AddDays(-1).ToString("dd.MM.yyyy")}</strong>";
                         }
                         else
                         {
                             mainElement.ElementList[0].Description.InderValue +=
-                                $"<br><strong>{Translations.Deadline}: {((DateTime)planning.NextExecutionTime).AddDays(-1).ToString("dd.MM.yyyy")}</strong>";
+                                $"<br><strong>{SharedResource.Deadline}: {((DateTime)planning.NextExecutionTime).AddDays(-1).ToString("dd.MM.yyyy")}</strong>";
                         }
                     }
                     mainElement.DisplayOrder =  (int)(planning.NextExecutionTime!.Value - new DateTime(2022, 12, 5)).TotalDays;
