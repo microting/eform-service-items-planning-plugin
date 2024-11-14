@@ -35,21 +35,14 @@ using Rebus.Handlers;
 using Constants = Microting.eForm.Infrastructure.Constants.Constants;
 using Microting.eFormApi.BasePn.Infrastructure.Helpers;
 
-public class ScheduledItemExecutedHandler : IHandleMessages<ScheduledItemExecuted>
+public class ScheduledItemExecutedHandler(
+    DbContextHelper dbContextHelper,
+    IBus bus,
+    eFormCore.Core sdkCore)
+    : IHandleMessages<ScheduledItemExecuted>
 {
-    private readonly ItemsPlanningPnDbContext _dbContext;
-    private readonly IBus _bus;
-    private readonly eFormCore.Core _sdkCore;
-
-    public ScheduledItemExecutedHandler(
-        DbContextHelper dbContextHelper,
-        IBus bus,
-        eFormCore.Core sdkCore)
-    {
-        _dbContext = dbContextHelper.GetDbContext();
-        _bus = bus;
-        _sdkCore = sdkCore;
-    }
+    private readonly ItemsPlanningPnDbContext _dbContext = dbContextHelper.GetDbContext();
+    private readonly eFormCore.Core _sdkCore = sdkCore;
 
     public async Task Handle(ScheduledItemExecuted message)
     {
@@ -68,15 +61,15 @@ public class ScheduledItemExecutedHandler : IHandleMessages<ScheduledItemExecute
             return;
         }
 
-        Log.LogEvent($"ScheduledItemExecutedHandler.Task: SiteIds {{string.Join(\", \", siteIds)}}");
+        Log.LogEvent($"ScheduledItemExecutedHandler.Task: SiteIds {string.Join(", ", siteIds)}");
 
         if (message.PlanningSiteId.HasValue)
         {
-            await _bus.SendLocal(new PlanningCaseSingleCreate(planning.Id, planning.RelatedEFormId, message.PlanningSiteId.Value));
+            await bus.SendLocal(new PlanningCaseSingleCreate(planning.Id, planning.RelatedEFormId, message.PlanningSiteId.Value));
         }
         else
         {
-            await _bus.SendLocal(new PlanningCaseCreate(planning.Id, planning.RelatedEFormId));
+            await bus.SendLocal(new PlanningCaseCreate(planning.Id, planning.RelatedEFormId));
         }
     }
 }
