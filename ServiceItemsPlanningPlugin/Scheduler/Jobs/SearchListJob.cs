@@ -21,7 +21,6 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
-
 using Sentry;
 
 namespace ServiceItemsPlanningPlugin.Scheduler.Jobs;
@@ -37,7 +36,6 @@ using Microting.eForm.Infrastructure.Constants;
 using Microting.ItemsPlanningBase.Infrastructure.Data;
 using Microting.ItemsPlanningBase.Infrastructure.Data.Entities;
 using Microting.ItemsPlanningBase.Infrastructure.Enums;
-using Microting.eFormApi.BasePn.Infrastructure.Helpers;
 using Rebus.Bus;
 
 public static class DateTimeExtensions
@@ -49,21 +47,13 @@ public static class DateTimeExtensions
     }
 }
 
-public class SearchListJob : IJob
+public class SearchListJob(
+    DbContextHelper dbContextHelper,
+    IBus bus,
+    eFormCore.Core sdkCore)
+    : IJob
 {
-    private readonly ItemsPlanningPnDbContext _dbContext;
-    private readonly IBus _bus;
-    private readonly eFormCore.Core _sdkCore;
-
-    public SearchListJob(
-        DbContextHelper dbContextHelper,
-        IBus bus,
-        eFormCore.Core sdkCore)
-    {
-        _dbContext = dbContextHelper.GetDbContext();
-        _bus = bus;
-        _sdkCore = sdkCore;
-    }
+    private readonly ItemsPlanningPnDbContext _dbContext = dbContextHelper.GetDbContext();
 
     public async Task Execute()
     {
@@ -76,7 +66,7 @@ public class SearchListJob : IJob
     {
         if (DateTime.UtcNow.Hour == 6)
         {
-            Log.LogEvent("SearchListJob.Task: SearchListJob.Execute got called");
+            Console.WriteLine("SearchListJob.Task: SearchListJob.ExecutePush got called");
             var now = DateTime.UtcNow;
 
             var baseQuery = _dbContext.Plannings
@@ -94,12 +84,14 @@ public class SearchListJob : IJob
 
             var pushReadyPlannings = await pushReady.ToListAsync();
 
+            Console.WriteLine($"SearchListJob.Task: Found {pushReadyPlannings.Count} pushReadyPlannings");
+
             foreach (Planning planning in pushReadyPlannings)
             {
                 if ((((DateTime)planning.NextExecutionTime!).AddDays(-1).Date - now.Date).Days ==
                     planning.DaysBeforeRedeploymentPushMessage)
                 {
-                    await _bus.SendLocal(new PushMessage(planning.Id));
+                    await bus.SendLocal(new PushMessage(planning.Id));
                 }
             }
         }
@@ -117,19 +109,19 @@ public class SearchListJob : IJob
                 .Single(x => x.Name == "ItemsPlanningBaseSettings:EndTime").Value);
             if (DateTime.UtcNow.Hour < startTime)
             {
-                Log.LogEvent(
+                Console.WriteLine(
                     $"SearchListJob.Task: ExecuteDeploy The current hour is smaller than the start time of {startTime}, so ending processing");
                 return;
             }
 
             if (DateTime.UtcNow.Hour > endTime)
             {
-                Log.LogEvent(
+                Console.WriteLine(
                     $"SearchListJob.Task: ExecuteDeploy The current hour is bigger than the end time of {endTime}, so ending processing");
                 return;
             }
 
-            Log.LogEvent("SearchListJob.Task: SearchListJob.Execute got called");
+            Console.WriteLine("SearchListJob.Task: SearchListJob.ExecuteDeploy got called");
             var now = DateTime.UtcNow;
             now = new DateTime(now.Year, now.Month, now.Day, 0, 0, 0);
             var baseQuery = _dbContext.Plannings
@@ -141,12 +133,12 @@ public class SearchListJob : IJob
                 .Where(x => x.Enabled)
                 .ToListAsync();
 
-            Log.LogEvent($"SearchListJob.Task: Found {planningsForExecution.Count} plannings");
+            Console.WriteLine($"SearchListJob.Task: Found {planningsForExecution.Count} plannings");
 
             var scheduledItemPlannings = new List<Planning>();
             scheduledItemPlannings.AddRange(planningsForExecution);
 
-            await using var sdkDbContext = _sdkCore.DbContextHelper.GetDbContext();
+            await using var sdkDbContext = sdkCore.DbContextHelper.GetDbContext();
 
             foreach (var planning in scheduledItemPlannings)
             {
@@ -198,9 +190,9 @@ public class SearchListJob : IJob
                     await planningSite.Update(_dbContext);
                 }
 
-                await _bus.SendLocal(new ScheduledItemExecuted(planning.Id));
+                await bus.SendLocal(new ScheduledItemExecuted(planning.Id));
 
-                Log.LogEvent($"SearchListJob.Task: Planning {planning.Id} executed");
+                Console.WriteLine($"SearchListJob.Task: Planning {planning.Id} executed");
             }
         }
     }
@@ -247,8 +239,9 @@ public class SearchListJob : IJob
         }
         catch (Exception ex)
         {
-            Log.LogException(ex.Message);
-            Log.LogException(ex.StackTrace);
+            Console.WriteLine(ex.Message);
+            Console.WriteLine(ex.StackTrace);
+            SentrySdk.CaptureException(ex);
         }
     }
 }

@@ -68,7 +68,7 @@ public class ScheduledItemExecutedHandler : IHandleMessages<ScheduledItemExecute
             return;
         }
 
-        Log.LogEvent($"ScheduledItemExecutedHandler.Task: SiteIds {siteIds}");
+        Log.LogEvent($"ScheduledItemExecutedHandler.Task: SiteIds {{string.Join(\", \", siteIds)}}");
 
         if (message.PlanningSiteId.HasValue)
         {
