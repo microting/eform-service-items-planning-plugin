@@ -229,6 +229,7 @@ public class ItemCaseCreateHandler : IHandleMessages<PlanningCaseCreate>
 
                 mainElement.PushMessageBody = body;
                 mainElement.PushMessageTitle = planningNameTranslation.Name;
+                mainElement.BadgeCountEnabled = true;
                 //     }
                 //
                 // }
