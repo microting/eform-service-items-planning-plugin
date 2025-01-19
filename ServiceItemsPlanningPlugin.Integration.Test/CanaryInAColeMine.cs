@@ -32,7 +32,7 @@ namespace ServiceItemsPlanningPlugin.Integration.Test
         [Test]
         public void CanPeep()
         {
-            Assert.True(true);
+            Assert.That(true);
         }
     }
 }
