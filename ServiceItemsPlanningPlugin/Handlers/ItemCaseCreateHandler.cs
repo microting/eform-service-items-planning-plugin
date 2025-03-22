@@ -158,8 +158,6 @@ public class ItemCaseCreateHandler : IHandleMessages<PlanningCaseCreate>
                 {
                     if (planning.NextExecutionTime != null)
                     {
-                        DateTime beginningOfTime = new DateTime(2020, 1, 1);
-                        mainElement.DisplayOrder = ((DateTime)planning.NextExecutionTime - beginningOfTime).Days;
                         Thread.CurrentThread.CurrentCulture = CultureInfo.GetCultureInfo(language.LanguageCode);
                         Thread.CurrentThread.CurrentUICulture = CultureInfo.GetCultureInfo(language.LanguageCode);
 
@@ -174,7 +172,8 @@ public class ItemCaseCreateHandler : IHandleMessages<PlanningCaseCreate>
                                 $"<br><strong>{SharedResource.Deadline}: {((DateTime)planning.NextExecutionTime).AddDays(-1).ToString("dd.MM.yyyy")}</strong>";
                         }
                     }
-                    mainElement.DisplayOrder =  (int)(planning.NextExecutionTime!.Value - new DateTime(2022, 12, 5)).TotalDays;
+                    DateTime beginningOfTime = new DateTime(2020, 1, 1);
+                    mainElement.DisplayOrder = ((DateTime)planning.NextExecutionTime - beginningOfTime).Days;
                 }
 
                 var planningCaseSite =
