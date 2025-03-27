@@ -13,7 +13,7 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.DependencyModel" Version="9.0.3" />
     <PackageReference Include="Microting.ItemsPlanningBase" Version="8.0.85" />
-    <PackageReference Include="Microting.eForm" Version="9.0.25" />
+    <PackageReference Include="Microting.eForm" Version="9.0.26" />
     <PackageReference Include="Microting.WindowsService.BasePn" Version="2.0.0" />
     <PackageReference Include="Sentry" Version="5.4.0" />
     <PackageReference Include="System.ComponentModel.Composition" Version="9.0.3" />
