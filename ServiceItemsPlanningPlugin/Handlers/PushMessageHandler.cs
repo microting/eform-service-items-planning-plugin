@@ -52,11 +52,11 @@ public class PushMessageHandler : IHandleMessages<PushMessage>
 
     public async Task Handle(PushMessage message)
     {
-        Console.WriteLine("ItemsPlanningService PushMessageHandler.Handle : PushMessage");
+        Console.WriteLine("info: ItemsPlanningService PushMessageHandler.Handle : PushMessage");
         Planning planning = await _dbContext.Plannings.FirstOrDefaultAsync(x => x.Id == message.PlanningId);
         if (planning != null)
         {
-            Console.WriteLine("ItemsPlanningService PushMessageHandler.Handle : Planning found in DB : " + planning.Id);
+            Console.WriteLine("info: ItemsPlanningService PushMessageHandler.Handle : Planning found in DB : " + planning.Id);
             await using MicrotingDbContext microtingDbContext = _sdkCore.DbContextHelper.GetDbContext();
             List<PlanningSite> planningSites =
                 await _dbContext.PlanningSites.Where(x => x.PlanningId == message.PlanningId && x.WorkflowState != Constants.WorkflowStates.Removed).ToListAsync();
@@ -66,7 +66,7 @@ public class PushMessageHandler : IHandleMessages<PushMessage>
                 Site site = await microtingDbContext.Sites.FirstOrDefaultAsync(x => x.Id == planningSite.SiteId);
                 if (site != null)
                 {
-                    Console.WriteLine($"ItemsPlanningService PushMessageHandler.Handle : Site found in DB : {site.Id} - {site.Name}");
+                    Console.WriteLine($"info: ItemsPlanningService PushMessageHandler.Handle : Site found in DB : {site.Id} - {site.Name}");
                     PlanningNameTranslation planningNameTranslation =
                         await _dbContext.PlanningNameTranslation.FirstAsync(x =>
                             x.PlanningId == planning.Id
@@ -88,7 +88,7 @@ public class PushMessageHandler : IHandleMessages<PushMessage>
                         && x.MicrotingSdkSiteId == planningSite.SiteId
                         && x.Status != 100
                         && x.WorkflowState == Constants.WorkflowStates.Created);
-                    Log.LogEvent($"ItemsPlanningService PushMessageHandler.Handle : Sending push message body: {body}, title : {planningNameTranslation.Name} to site.id : {site.Id}");
+                    Log.LogEvent($"info: ItemsPlanningService PushMessageHandler.Handle : Sending push message body: {body}, title : {planningNameTranslation.Name} to site.id : {site.Id}");
                     Case @case =
                         await microtingDbContext.Cases.FirstAsync(x =>
                             x.Id == planningCaseSite.MicrotingSdkCaseId);

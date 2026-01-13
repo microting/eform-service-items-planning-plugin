@@ -56,21 +56,21 @@ public class EFormCompletedHandler : IHandleMessages<eFormCompleted>
     public async Task Handle(eFormCompleted message)
     {
         await using MicrotingDbContext sdkDbContext = _sdkCore.DbContextHelper.GetDbContext();
-        Console.WriteLine($"Checking PlanningCaseSites with MicrotingSdkCaseId == {message.caseId}");
-        Console.WriteLine($"Checking Cases with Id == {message.caseId}");
-        Console.WriteLine($"Checking Cases with MicrotingCheckUid == {message.CheckId}");
+        Console.WriteLine($"info: Checking PlanningCaseSites with MicrotingSdkCaseId == {message.caseId}");
+        Console.WriteLine($"info: Checking Cases with Id == {message.caseId}");
+        Console.WriteLine($"info: Checking Cases with MicrotingCheckUid == {message.CheckId}");
         var planningCaseSite =
             await _dbContext.PlanningCaseSites.FirstOrDefaultAsync(x => x.MicrotingSdkCaseId == message.caseId);
         var dbCase = await sdkDbContext.Cases.FirstOrDefaultAsync(x => x.Id == message.caseId) ?? await sdkDbContext.Cases.FirstOrDefaultAsync(x => x.MicrotingCheckUid == message.CheckId);
 
         if (planningCaseSite == null)
         {
-            Console.WriteLine($"Checking CheckListSites with MicrotingUid == {message.MicrotingUId}");
+            Console.WriteLine($"info: Checking CheckListSites with MicrotingUid == {message.MicrotingUId}");
             var checkListSite = await sdkDbContext.CheckListSites.FirstOrDefaultAsync(x =>
                 x.MicrotingUid == message.MicrotingUId);
             if (checkListSite != null)
             {
-                Console.WriteLine($"Checking PlanningCaseSites with MicrotingCheckListSitId == {checkListSite.Id}");
+                Console.WriteLine($"info: Checking PlanningCaseSites with MicrotingCheckListSitId == {checkListSite.Id}");
                 planningCaseSite =
                     await _dbContext.PlanningCaseSites.FirstOrDefaultAsync(x =>
                         x.MicrotingCheckListSitId == checkListSite.Id);

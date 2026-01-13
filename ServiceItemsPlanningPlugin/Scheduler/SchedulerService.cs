@@ -36,7 +36,7 @@ public class SchedulerService
     {
         var timer = new Timer(x =>
         {
-            Console.WriteLine("SchedulerService.Time got called");
+            Console.WriteLine("info: SchedulerService.Time got called");
             job.Execute();
         }, null, TimeSpan.Zero, TimeSpan.FromMinutes(interval));
         _timers.Add(timer);

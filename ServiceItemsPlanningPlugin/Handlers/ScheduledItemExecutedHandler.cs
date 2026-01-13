@@ -57,11 +57,11 @@ public class ScheduledItemExecutedHandler(
             .ToList();
         if (!siteIds.Any())
         {
-            Log.LogEvent("ScheduledItemExecutedHandler.Task: SiteIds not set");
+            Log.LogEvent("info: ScheduledItemExecutedHandler.Task: SiteIds not set");
             return;
         }
 
-        Log.LogEvent($"ScheduledItemExecutedHandler.Task: SiteIds {string.Join(", ", siteIds)}");
+        Log.LogEvent($"info: ScheduledItemExecutedHandler.Task: SiteIds {string.Join(", ", siteIds)}");
 
         if (message.PlanningSiteId.HasValue)
         {

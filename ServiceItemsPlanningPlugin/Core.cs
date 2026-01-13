@@ -139,7 +139,7 @@ public class Core : ISdkEventHandler
             // Example sample rate for your transactions: captures 10% of transactions
             options.TracesSampleRate = 0.1;
         });
-        Console.WriteLine("ServiceItemsPlanningPlugin start called");
+        Console.WriteLine("info: ServiceItemsPlanningPlugin start called");
         try
         {
             var dbNameSection = Regex.Match(sdkConnectionString, @"(Database=\w*;)").Groups[0].Value;
@@ -153,13 +153,13 @@ public class Core : ISdkEventHandler
             SentrySdk.ConfigureScope(scope =>
             {
                 scope.SetTag("customerNo", number.ToString());
-                Console.WriteLine("customerNo: " + number);
+                Console.WriteLine("info: customerNo: " + number);
                 scope.SetTag("osVersion", Environment.OSVersion.ToString());
-                Console.WriteLine("osVersion: " + Environment.OSVersion);
+                Console.WriteLine("info: osVersion: " + Environment.OSVersion);
                 scope.SetTag("osArchitecture", RuntimeInformation.OSArchitecture.ToString());
-                Console.WriteLine("osArchitecture: " + RuntimeInformation.OSArchitecture);
+                Console.WriteLine("info: osArchitecture: " + RuntimeInformation.OSArchitecture);
                 scope.SetTag("osName", RuntimeInformation.OSDescription);
-                Console.WriteLine("osName: " + RuntimeInformation.OSDescription);
+                Console.WriteLine("info: osName: " + RuntimeInformation.OSDescription);
             });
 
             if (!_coreAvailable && !_coreStatChanging)
@@ -184,14 +184,14 @@ public class Core : ISdkEventHandler
                 _coreStatChanging = false;
 
                 StartSdkCoreSqlOnly(sdkConnectionString);
-                Console.WriteLine($"Connection string: {sdkConnectionString}");
+                Console.WriteLine($"info: Connection string: {sdkConnectionString}");
 
                 var rabbitmqHost = _sdkCore.GetSdkSetting(Settings.rabbitMqHost).GetAwaiter().GetResult();
-                Console.WriteLine($"rabbitmqHost: {rabbitmqHost}");
+                Console.WriteLine($"info: rabbitmqHost: {rabbitmqHost}");
                 var rabbitMqUser = _sdkCore.GetSdkSetting(Settings.rabbitMqUser).GetAwaiter().GetResult();
-                Console.WriteLine($"rabbitMqUser: {rabbitMqUser}");
+                Console.WriteLine($"info: rabbitMqUser: {rabbitMqUser}");
                 var rabbitMqPassword = _sdkCore.GetSdkSetting(Settings.rabbitMqPassword).GetAwaiter().GetResult();
-                Console.WriteLine($"rabbitMqPassword: {rabbitMqPassword}");
+                Console.WriteLine($"info: rabbitMqPassword: {rabbitMqPassword}");
 
                 string temp = _dbContext.PluginConfigurationValues
                     .SingleOrDefault(x => x.Name == "ItemsPlanningBaseSettings:MaxParallelism")?.Value;
@@ -216,13 +216,13 @@ public class Core : ISdkEventHandler
 
                 ConfigureScheduler();
             }
-            Console.WriteLine("ServiceItemsPlanningPlugin started");
+            Console.WriteLine("info: ServiceItemsPlanningPlugin started");
             return true;
         }
         catch(Exception ex)
         {
             Console.ForegroundColor = ConsoleColor.DarkRed;
-            Console.WriteLine("Start failed " + ex.Message);
+            Console.WriteLine("fail: Start failed " + ex.Message);
             throw;
         }
     }

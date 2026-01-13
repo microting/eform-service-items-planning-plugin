@@ -66,7 +66,7 @@ public class SearchListJob(
     {
         if (DateTime.UtcNow.Hour == 6)
         {
-            Console.WriteLine("SearchListJob.Task: SearchListJob.ExecutePush got called");
+            Console.WriteLine("info: SearchListJob.Task: SearchListJob.ExecutePush got called");
             var now = DateTime.UtcNow;
 
             var baseQuery = _dbContext.Plannings
@@ -84,7 +84,7 @@ public class SearchListJob(
 
             var pushReadyPlannings = await pushReady.ToListAsync();
 
-            Console.WriteLine($"SearchListJob.Task: Found {pushReadyPlannings.Count} pushReadyPlannings");
+            Console.WriteLine($"info: SearchListJob.Task: Found {pushReadyPlannings.Count} pushReadyPlannings");
 
             foreach (Planning planning in pushReadyPlannings)
             {
@@ -110,18 +110,18 @@ public class SearchListJob(
             if (DateTime.UtcNow.Hour < startTime)
             {
                 Console.WriteLine(
-                    $"SearchListJob.Task: ExecuteDeploy The current hour is smaller than the start time of {startTime}, so ending processing");
+                    $"info: SearchListJob.Task: ExecuteDeploy The current hour is smaller than the start time of {startTime}, so ending processing");
                 return;
             }
 
             if (DateTime.UtcNow.Hour > endTime)
             {
                 Console.WriteLine(
-                    $"SearchListJob.Task: ExecuteDeploy The current hour is bigger than the end time of {endTime}, so ending processing");
+                    $"info: SearchListJob.Task: ExecuteDeploy The current hour is bigger than the end time of {endTime}, so ending processing");
                 return;
             }
 
-            Console.WriteLine("SearchListJob.Task: SearchListJob.ExecuteDeploy got called");
+            Console.WriteLine("info: SearchListJob.Task: SearchListJob.ExecuteDeploy got called");
             var now = DateTime.UtcNow;
             now = new DateTime(now.Year, now.Month, now.Day, 0, 0, 0);
             var baseQuery = _dbContext.Plannings
@@ -133,7 +133,7 @@ public class SearchListJob(
                 .Where(x => x.Enabled)
                 .ToListAsync();
 
-            Console.WriteLine($"SearchListJob.Task: Found {planningsForExecution.Count} plannings");
+            Console.WriteLine($"info: SearchListJob.Task: Found {planningsForExecution.Count} plannings");
 
             var scheduledItemPlannings = new List<Planning>();
             scheduledItemPlannings.AddRange(planningsForExecution);
@@ -192,7 +192,7 @@ public class SearchListJob(
 
                 await bus.SendLocal(new ScheduledItemExecuted(planning.Id));
 
-                Console.WriteLine($"SearchListJob.Task: Planning {planning.Id} executed");
+                Console.WriteLine($"info: SearchListJob.Task: Planning {planning.Id} executed");
             }
         }
     }
@@ -215,7 +215,7 @@ public class SearchListJob(
             foreach (var planning in planningForCorrectingNextExecutionTime)
             {
                 SentrySdk.CaptureMessage($"Setting NextExecutionTime to null for planning.Id {planning.Id}");
-                Console.WriteLine($"Setting NextExecutionTime to null for planning.Id {planning.Id}");
+                Console.WriteLine($"fail: Setting NextExecutionTime to null for planning.Id {planning.Id}");
                 planning.NextExecutionTime = null;
                 await planning.Update(_dbContext);
             }
@@ -232,7 +232,7 @@ public class SearchListJob(
                 SentrySdk.CaptureMessage(
                     $"Setting NextExecutionTime to null for planning.Id {planning.Id} since LastExecutedTime is null");
                 Console.WriteLine(
-                    $"Setting NextExecutionTime to null for planning.Id {planning.Id} since LastExecutedTime is null");
+                    $"fail: Setting NextExecutionTime to null for planning.Id {planning.Id} since LastExecutedTime is null");
                 planning.NextExecutionTime = null;
                 await planning.Update(_dbContext);
             }

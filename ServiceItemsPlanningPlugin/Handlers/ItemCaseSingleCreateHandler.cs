@@ -87,11 +87,11 @@ public class ItemCaseSingleCreateHandler : IHandleMessages<PlanningCaseSingleCre
                         Constants.WorkflowStates.Retracted)
             .ToListAsync();
         Log.LogEvent(
-            $"ItemCaseCreateHandler.Task: Found {casesToDelete.Count} PlanningCaseSites, which has not yet been retracted, so retracting now.");
+            $"info: ItemCaseCreateHandler.Task: Found {casesToDelete.Count} PlanningCaseSites, which has not yet been retracted, so retracting now.");
 
         foreach (var caseToDelete in casesToDelete)
         {
-            Log.LogEvent($"ItemCaseCreateHandler.Task: Trying to retract the case with Id: {caseToDelete.Id}");
+            Log.LogEvent($"info: ItemCaseCreateHandler.Task: Trying to retract the case with Id: {caseToDelete.Id}");
             var caseDto = await _sdkCore.CaseLookupCaseId(caseToDelete.MicrotingSdkCaseId);
             if (caseDto.MicrotingUId != null) await _sdkCore.CaseDelete((int) caseDto.MicrotingUId);
             caseToDelete.WorkflowState = Constants.WorkflowStates.Retracted;

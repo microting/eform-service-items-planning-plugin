@@ -94,11 +94,11 @@ public class ItemCaseCreateHandler : IHandleMessages<PlanningCaseCreate>
                     Where(x => x.PlanningId == planning.Id
                                && x.MicrotingSdkSiteId == siteId
                                && x.WorkflowState != Constants.WorkflowStates.Retracted).ToListAsync();
-                Log.LogEvent($"ItemCaseCreateHandler.Task: Found {casesToDelete.Count} PlanningCaseSites, which has not yet been retracted, so retracting now.");
+                Log.LogEvent($"info: ItemCaseCreateHandler.Task: Found {casesToDelete.Count} PlanningCaseSites, which has not yet been retracted, so retracting now.");
 
                 foreach (var caseToDelete in casesToDelete)
                 {
-                    Log.LogEvent($"ItemCaseCreateHandler.Task: Trying to retract the case with Id: {caseToDelete.Id}");
+                    Log.LogEvent($"info: ItemCaseCreateHandler.Task: Trying to retract the case with Id: {caseToDelete.Id}");
                     var sdkCase = await microtingDbContext.Cases.FirstOrDefaultAsync(x => x.Id == caseToDelete.MicrotingSdkCaseId);
                     if (sdkCase is { MicrotingUid: { } })
                     {
@@ -118,7 +118,7 @@ public class ItemCaseCreateHandler : IHandleMessages<PlanningCaseCreate>
                     .FirstOrDefault(x => x.LanguageId == language.Id && x.PlanningId == planning.Id);
                 if (planningNameTranslation == null)
                 {
-                    Console.WriteLine("planningNameTranslation is null");
+                    Console.WriteLine("fail: planningNameTranslation is null");
                     continue;
                 }
                 var translation = planningNameTranslation?.Name;
