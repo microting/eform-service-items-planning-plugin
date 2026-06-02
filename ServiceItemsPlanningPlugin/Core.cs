@@ -176,7 +176,6 @@ public class Core : ISdkEventHandler
                 ItemsPlanningPnContextFactory contextFactory = new ItemsPlanningPnContextFactory();
 
                 _dbContext = contextFactory.CreateDbContext(new[] { connectionString });
-                _dbContext.Database.Migrate();
 
                 _dbContextHelper = new DbContextHelper(connectionString);
 
