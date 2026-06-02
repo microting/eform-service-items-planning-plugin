@@ -38,6 +38,8 @@ using Infrastructure.Helpers;
 using Installers;
 using Messages;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microting.eForm.Dto;
 using Microting.ItemsPlanningBase.Infrastructure.Data;
 using Microting.ItemsPlanningBase.Infrastructure.Data.Factories;
@@ -176,6 +178,12 @@ public class Core : ISdkEventHandler
                 ItemsPlanningPnContextFactory contextFactory = new ItemsPlanningPnContextFactory();
 
                 _dbContext = contextFactory.CreateDbContext(new[] { connectionString });
+
+                var historyRepo = _dbContext.GetService<IHistoryRepository>();
+                if (!historyRepo.Exists() || _dbContext.Database.GetPendingMigrations().Any())
+                {
+                    _dbContext.Database.Migrate();
+                }
 
                 _dbContextHelper = new DbContextHelper(connectionString);
 
