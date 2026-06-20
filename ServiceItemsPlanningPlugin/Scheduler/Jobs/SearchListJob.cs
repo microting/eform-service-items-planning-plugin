@@ -45,6 +45,14 @@ public static class DateTimeExtensions
         int diff = (7 + (dt.DayOfWeek - startOfWeek)) % 7;
         return dt.AddDays(-1 * diff).Date;
     }
+
+    public static DateTime? NthWeekdayOfMonth(int year, int month, int ordinal, int targetDow)
+    {
+        var firstOfMonth = new DateTime(year, month, 1, 0, 0, 0, DateTimeKind.Utc);
+        int dowOffset = (targetDow - (int)firstOfMonth.DayOfWeek + 7) % 7;
+        var candidate = firstOfMonth.AddDays(dowOffset + (ordinal - 1) * 7);
+        return candidate.Month != month ? null : candidate;
+    }
 }
 
 public class SearchListJob(
@@ -170,13 +178,28 @@ public class SearchListJob(
 
                 if (planning.RepeatType == RepeatType.Month)
                 {
-                    if (planning.DayOfMonth != null)
+                    var current = (DateTime)planning.NextExecutionTime!;
+                    if (planning.RepeatOrdinalWeek is > 0 && planning.DayOfWeek != null)
+                    {
+                        // Nth-weekday-of-month rule (e.g. "3rd Thursday"): advance whole months,
+                        // then snap to the Nth occurrence of the target weekday in that month.
+                        var target = current.AddMonths(planning.RepeatEvery);
+                        var snapped = DateTimeExtensions.NthWeekdayOfMonth(
+                            target.Year, target.Month, planning.RepeatOrdinalWeek.Value, (int)planning.DayOfWeek.Value);
+                        // If the ordinal spills past the month (e.g. no 5th Thursday), fall back to the
+                        // last occurrence of that weekday in the month.
+                        snapped ??= DateTimeExtensions.NthWeekdayOfMonth(
+                            target.Year, target.Month, 4, (int)planning.DayOfWeek.Value)
+                            ?? DateTimeExtensions.NthWeekdayOfMonth(target.Year, target.Month, 3, (int)planning.DayOfWeek.Value);
+                        planning.NextExecutionTime = new DateTime(snapped!.Value.Year, snapped.Value.Month, snapped.Value.Day, 0, 0, 0);
+                    }
+                    else if (planning.DayOfMonth != null)
                     {
                         if (planning.DayOfMonth == 0)
                         {
                             planning.DayOfMonth = 1;
                         }
-                        planning.NextExecutionTime = ((DateTime)planning.NextExecutionTime!).AddMonths(planning.RepeatEvery);
+                        planning.NextExecutionTime = current.AddMonths(planning.RepeatEvery);
                     }
                 }
 
