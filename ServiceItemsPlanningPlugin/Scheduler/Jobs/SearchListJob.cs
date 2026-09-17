@@ -32,6 +32,7 @@ using System.Threading.Tasks;
 using Infrastructure.Helpers;
 using Messages;
 using Microsoft.EntityFrameworkCore;
+using Microting.eForm.Dto;
 using Microting.eForm.Infrastructure.Constants;
 using Microting.ItemsPlanningBase.Infrastructure.Data;
 using Microting.ItemsPlanningBase.Infrastructure.Data.Entities;
@@ -62,6 +63,66 @@ public class SearchListJob(
     : IJob
 {
     private readonly ItemsPlanningPnDbContext _dbContext = dbContextHelper.GetDbContext();
+
+    /// <summary>
+    /// Reads the SDK's <c>skipCloudDeploy</c> setting through the SDK's own public API, so this stays
+    /// correct if the storage representation ever changes.
+    /// <para>
+    /// The SDK's own <c>Core.SkipCloudDeployAsync()</c> — the check it uses to short-circuit
+    /// <c>SendXml</c> — is <c>private</c>, so it cannot be called from here;
+    /// <see cref="eFormCore.Core.GetSdkSetting"/> is the public read of the same
+    /// <see cref="Settings.skipCloudDeploy"/> row, and the <c>== "true"</c> comparison below is
+    /// deliberately the identical ordinal, case-sensitive test the SDK applies, so this job skips
+    /// exactly when the SDK skips and never when it would still deploy.
+    /// </para>
+    /// <para>
+    /// Fail-safe in one direction: a missing row (installations that pre-date the setting — the SDK
+    /// returns <c>"N/A"</c> for those) and any read failure both come back as <c>false</c>, i.e.
+    /// normal cloud deployment, so the behaviour of this job is unchanged wherever the setting is not
+    /// explicitly turned on.
+    /// </para>
+    /// </summary>
+    public static async Task<bool> IsCloudDeploySkippedAsync(eFormCore.Core sdkCore)
+    {
+        try
+        {
+            // GetSdkSetting already swallows a missing row into "N/A"; the catch below is for the
+            // case where it cannot be reached at all.
+            return await sdkCore.GetSdkSetting(Settings.skipCloudDeploy) == "true";
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(
+                $"fail: SearchListJob.Task: could not read the {nameof(Settings.skipCloudDeploy)} SDK setting, assuming cloud deploy is enabled: {ex.Message}");
+            SentrySdk.CaptureException(ex);
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// True when the planning is owned by the backend-configuration plugin rather than by items-planning
+    /// itself. Backend-configuration stamps every planning it creates with
+    /// <c>IsLocked = true, IsEditable = false</c>; plannings created through the items-planning UI or
+    /// import are always <c>IsLocked = false, IsEditable = true</c>. The items-planning plugin already
+    /// treats the same pair as an "owned elsewhere" predicate in PairingService.
+    /// </summary>
+    public static bool IsBackendConfigurationOwned(Planning planning)
+    {
+        return planning.IsLocked && !planning.IsEditable;
+    }
+
+    /// <summary>
+    /// The single "this planning is none of our business this cycle" test, shared by ExecuteDeploy and
+    /// ExecuteCleanUp so the two can never drift apart. ExecuteDeploy leaves such a planning
+    /// undeployed, which means its <c>LastExecutedTime</c> stays null forever — so ExecuteCleanUp has
+    /// to honour the same predicate, otherwise its "NextExecutionTime set but never executed" branch
+    /// would match every one of them on every cycle, for ever, nulling NextExecutionTime and raising a
+    /// Sentry message each time.
+    /// </summary>
+    public static bool IsLeftToBackendConfiguration(Planning planning, bool skipCloudDeploy)
+    {
+        return skipCloudDeploy && IsBackendConfigurationOwned(planning);
+    }
 
     public async Task Execute()
     {
@@ -132,6 +193,10 @@ public class SearchListJob(
             Console.WriteLine("info: SearchListJob.Task: SearchListJob.ExecuteDeploy got called");
             var now = DateTime.UtcNow;
             now = new DateTime(now.Year, now.Month, now.Day, 0, 0, 0);
+
+            // Read once per cycle, not per planning.
+            var skipCloudDeploy = await IsCloudDeploySkippedAsync(sdkCore);
+
             var baseQuery = _dbContext.Plannings
                 .Where(x => x.WorkflowState != Constants.WorkflowStates.Removed);
 
@@ -142,6 +207,26 @@ public class SearchListJob(
                 .ToListAsync();
 
             Console.WriteLine($"info: SearchListJob.Task: Found {planningsForExecution.Count} plannings");
+
+            if (skipCloudDeploy)
+            {
+                // With skipCloudDeploy the SDK short-circuits SendXml and hands back a synthetic
+                // MicrotingUid, so nothing ever leaves for the cloud and no notification comes back.
+                // For backend-configuration-owned plannings that makes this job pure harm: it retracts
+                // and redeploys against uids the cloud never saw, and destroys one-off and yearly
+                // deployments on every pass. Backend-configuration derives its own occurrences and
+                // creates its own Compliance rows, so it needs nothing this job writes.
+                // Ownership alone is deliberately NOT enough to skip: on an installation that still
+                // does cloud deploys, this job is the only thing performing a real CaseCreate for a
+                // recurring backend-configuration planning.
+                var skippedCount = planningsForExecution.Count(x => IsLeftToBackendConfiguration(x, skipCloudDeploy));
+                planningsForExecution = planningsForExecution
+                    .Where(x => !IsLeftToBackendConfiguration(x, skipCloudDeploy))
+                    .ToList();
+
+                Console.WriteLine(
+                    $"info: SearchListJob.Task: ExecuteDeploy skipCloudDeploy=true, skipped {skippedCount} backend-configuration-owned planning(s) (IsLocked=true, IsEditable=false) because cloud deploy is disabled and backend-configuration deploys them itself; {planningsForExecution.Count} planning(s) left for execution");
+            }
 
             var scheduledItemPlannings = new List<Planning>();
             scheduledItemPlannings.AddRange(planningsForExecution);
@@ -226,6 +311,10 @@ public class SearchListJob(
         {
             var now = DateTime.UtcNow;
             now = new DateTime(now.Year, now.Month, now.Day, 0, 0, 0);
+
+            // Read once per cycle, not per planning — same as ExecuteDeploy.
+            var skipCloudDeploy = await IsCloudDeploySkippedAsync(sdkCore);
+
             var baseQuery = _dbContext.Plannings
                 .Where(x => x.WorkflowState != Constants.WorkflowStates.Removed);
 
@@ -249,6 +338,25 @@ public class SearchListJob(
                 .Where(x => x.LastExecutedTime == null)
                 .Where(x => x.Enabled)
                 .ToListAsync();
+
+            if (skipCloudDeploy)
+            {
+                // A planning ExecuteDeploy deliberately skipped never gets a LastExecutedTime, so
+                // without this gate it would match this branch on every cycle for ever — nulling
+                // NextExecutionTime and raising a Sentry message each time. Leave it alone, exactly as
+                // ExecuteDeploy does.
+                var leftAloneCount =
+                    planningForCorrectingNextExecutionTime.Count(x => IsLeftToBackendConfiguration(x, skipCloudDeploy));
+                planningForCorrectingNextExecutionTime = planningForCorrectingNextExecutionTime
+                    .Where(x => !IsLeftToBackendConfiguration(x, skipCloudDeploy))
+                    .ToList();
+
+                if (leftAloneCount > 0)
+                {
+                    Console.WriteLine(
+                        $"info: SearchListJob.Task: ExecuteCleanUp skipCloudDeploy=true, left {leftAloneCount} backend-configuration-owned planning(s) with a null LastExecutedTime alone because ExecuteDeploy deliberately skipped them");
+                }
+            }
 
             foreach (var planning in planningForCorrectingNextExecutionTime)
             {
